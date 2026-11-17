@@ -1,0 +1,215 @@
+/* ==========================================================================
+   АДАПТАЦИЯ ПОД ЭЛЕКТРОННУЮ ДОСКУ (1920×1080, 1600×900, 1366×768),
+   КОМПЬЮТЕРНЫЙ И МОБИЛЬНЫЙ РЕЖИМЫ (responsive.css)
+   ========================================================================== */
+
+/* 1. Режим большой интерактивной доски 1920×1080 */
+@media (min-width: 1680px) {
+  .workspace-container {
+    max-width: 1860px;
+    padding: 20px 32px 125px;
+  }
+
+  .board-layout {
+    grid-template-columns: 1.52fr 1fr;
+    gap: 28px;
+  }
+
+  .geometry-stage-card {
+    min-height: auto;
+  }
+
+  .svg-canvas-wrapper {
+    height: 460px;
+  }
+
+  .geometry-svg {
+    height: 100%;
+  }
+}
+
+/* 2. Электронная доска 1600×900 и 1366×768 (компактная по высоте, без лишней прокрутки) */
+@media (min-width: 1200px) and (max-height: 920px) {
+  .app-header {
+    padding: 8px 20px;
+  }
+
+  .brand-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .level-progress-bar {
+    margin-top: 6px;
+    padding-top: 6px;
+  }
+
+  .level-step-btn {
+    padding: 6px 10px;
+    min-width: 128px;
+  }
+
+  .workspace-container {
+    padding: 12px 20px 230px;
+  }
+
+  .card-panel {
+    padding: 18px;
+  }
+
+  .geometry-stage-card {
+    min-height: auto;
+  }
+
+  .svg-canvas-wrapper {
+    height: 380px;
+  }
+
+  .geometry-svg {
+    height: 100%;
+  }
+
+  .pedagogical-callout {
+    padding: 12px 16px;
+  }
+
+  .calc-line {
+    padding: 9px 14px;
+  }
+}
+
+/* Специально для 1366×768 */
+@media (max-width: 1440px) and (min-width: 1025px) {
+  :root {
+    --fs-xs: 0.88rem;
+    --fs-sm: 1.0rem;
+    --fs-base: 1.1rem;
+    --fs-md: 1.24rem;
+    --fs-lg: 1.45rem;
+    --fs-xl: 1.75rem;
+    --fs-formula: 1.5rem;
+  }
+
+  .board-layout {
+    grid-template-columns: 1.35fr 1fr;
+    gap: 18px;
+  }
+
+  .level-step-btn {
+    min-width: 115px;
+    padding: 7px 10px;
+  }
+
+  .level-arrow {
+    display: none;
+  }
+}
+
+/* 3. Принудительный режим электронной доски (включается переключателем) */
+body.mode-board .board-layout {
+  grid-template-columns: 1.5fr 1fr;
+}
+
+body.mode-board .btn,
+body.mode-board .option-choice-btn {
+  min-height: 52px;
+}
+
+body.mode-board .dock-btn {
+  min-height: 42px;
+}
+
+body.mode-board .svg-canvas-wrapper {
+  height: 420px;
+}
+
+body.mode-board .workspace-container {
+  padding-bottom: 260px;
+}
+
+/* 4. Принудительный мобильный режим (для предпросмотра учителем или на смартфоне) */
+body.mode-mobile .workspace-container {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 12px 14px 150px;
+}
+
+body.mode-mobile .board-layout {
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+body.mode-mobile .mini-check-grid,
+body.mode-mobile .summary-rules-grid {
+  grid-template-columns: 1fr;
+}
+
+body.mode-mobile .geometry-stage-card {
+  min-height: 360px;
+}
+
+body.mode-mobile .svg-canvas-wrapper {
+  min-height: 280px;
+}
+
+/* 5. Адаптивная перестройка для планшетов и смартфонов */
+@media (max-width: 1080px) {
+  .board-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .mini-check-grid,
+  .summary-rules-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .geometry-stage-card {
+    min-height: 400px;
+  }
+
+  .svg-canvas-wrapper {
+    min-height: 320px;
+  }
+
+  .level-arrow {
+    display: none;
+  }
+}
+
+@media (max-width: 680px) {
+  :root {
+    --fs-xs: 0.85rem;
+    --fs-sm: 0.96rem;
+    --fs-base: 1.05rem;
+    --fs-md: 1.18rem;
+    --fs-lg: 1.35rem;
+    --fs-xl: 1.6rem;
+    --fs-formula: 1.35rem;
+  }
+
+  .app-header {
+    padding: 8px 12px;
+  }
+
+  .workspace-container {
+    padding: 12px 12px 165px;
+  }
+
+  .card-panel {
+    padding: 16px;
+  }
+
+  .teacher-dock {
+    padding: 8px 10px;
+  }
+
+  .dock-btn {
+    padding: 8px 11px;
+    min-height: 42px;
+    font-size: 0.82rem;
+  }
+
+  .dock-divider {
+    display: none;
+  }
+}

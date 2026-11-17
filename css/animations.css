@@ -1,0 +1,381 @@
+/* ==========================================================================
+   СИСТЕМА ПЛАВНЫХ ОБРАЗОВАТЕЛЬНЫХ АНИМАЦИЙ (animations.css)
+   Соответствует Разделу 6:
+   - Появление фигуры: 600–1000 мс
+   - Прорисовка линии разделения: 800–1200 мс
+   - Разделение и сборка частей: 600–900 мс
+   - Подсветка отдельной части: 300–500 мс
+   - Появление вычислений: 400–700 мс
+   ========================================================================== */
+
+:root {
+  --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-gentle: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.45, 0.64, 1);
+}
+
+/* --------------------------------------------------------------------------
+   1. АНИМАЦИЯ №1: ПОЯВЛЕНИЕ ФИГУРЫ (КОНТУР → ЗАЛИВКА → РАЗМЕРЫ)
+   -------------------------------------------------------------------------- */
+
+.geo-outer-contour {
+  fill: #E2E8F0;
+  fill-opacity: 0;
+  stroke: var(--geo-contour);
+  stroke-width: 3.5px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  stroke-dasharray: 2200;
+  stroke-dashoffset: 2200;
+  transition:
+    stroke-dashoffset 850ms var(--ease-smooth),
+    fill-opacity 650ms var(--ease-gentle) 350ms,
+    opacity 500ms var(--ease-gentle);
+}
+
+.geo-outer-contour.visible {
+  stroke-dashoffset: 0;
+  fill-opacity: 0.45;
+}
+
+.geo-outer-contour.faded {
+  fill-opacity: 0.03;
+  stroke-opacity: 0.2;
+  stroke-dasharray: 7 6;
+}
+
+/* Внешние размеры всей фигуры плавно скрываются, когда части разнесены в стороны */
+.layer-dimensions {
+  transition: opacity 420ms var(--ease-gentle);
+}
+
+.layer-dimensions.hidden-on-separate {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.layer-split-lines {
+  transition: opacity 420ms var(--ease-gentle);
+}
+
+.layer-split-lines.faded-on-separate {
+  opacity: 0.22;
+}
+
+/* Индивидуальные размеры и уголки каждой отдельной части (появляются при разнесении в стороны) */
+.geo-part-own-details {
+  opacity: 0;
+  transition: opacity 450ms var(--ease-smooth) 120ms;
+  pointer-events: none;
+}
+
+.geo-part-own-details.visible {
+  opacity: 1;
+}
+
+/* Размеры и выносные линии */
+.geo-dim-group {
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 550ms var(--ease-smooth),
+    transform 550ms var(--ease-smooth);
+}
+
+.geo-dim-group.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* --------------------------------------------------------------------------
+   2. АНИМАЦИЯ №2 И №5: ПРОРИСОВКА ЛИНИИ РАЗДЕЛЕНИЯ, РАЗДВИЖЕНИЕ И СБОРКА
+   -------------------------------------------------------------------------- */
+
+.geo-split-line {
+  stroke: var(--geo-split-line);
+  stroke-width: 4px;
+  stroke-linecap: round;
+  fill: none;
+  opacity: 0;
+  transition: opacity 250ms ease;
+}
+
+.geo-split-line.drawing {
+  opacity: 1;
+  animation: drawSplitLine 950ms var(--ease-smooth) forwards;
+}
+
+.geo-split-line-dashed-overlay {
+  stroke: #FFFFFF;
+  stroke-width: 4px;
+  stroke-dasharray: 8 8;
+  fill: none;
+  opacity: 0;
+  transition: opacity 400ms ease 600ms;
+}
+
+.geo-split-line-dashed-overlay.visible {
+  opacity: 0.85;
+}
+
+@keyframes drawSplitLine {
+  0% {
+    stroke-dashoffset: var(--line-len, 400);
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Группы отдельных частей сложной фигуры (аппаратное ускорение GPU без тяжёлых SVG filter) */
+.geo-part-group {
+  cursor: pointer;
+  transform: translate3d(0px, 0px, 0px);
+  transition:
+    transform 820ms var(--ease-smooth),
+    opacity 380ms var(--ease-gentle);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.geo-part-group.separated-shadow .geo-part-shape {
+  stroke-width: 3.8px;
+}
+
+.geo-part-shape {
+  stroke-width: 3.2px;
+  stroke-linejoin: round;
+  transition:
+    fill 550ms var(--ease-gentle),
+    fill-opacity 550ms var(--ease-gentle),
+    stroke 550ms var(--ease-gentle),
+    stroke-width 350ms var(--ease-gentle);
+}
+
+/* Начальное нейтральное состояние части до разделения */
+.geo-part-group.uncoloured .geo-part-shape {
+  fill: #E2E8F0;
+  fill-opacity: 0.25;
+  stroke: var(--geo-contour);
+}
+
+/* Цветовая система по типам фигур */
+.geo-part-group.colored.type-rect1 .geo-part-shape {
+  fill: var(--geo-rect1-fill);
+  fill-opacity: 0.92;
+  stroke: var(--geo-rect1-stroke);
+}
+
+.geo-part-group.colored.type-rect2 .geo-part-shape {
+  fill: var(--geo-rect2-fill);
+  fill-opacity: 0.92;
+  stroke: var(--geo-rect2-stroke);
+}
+
+.geo-part-group.colored.type-rect3 .geo-part-shape {
+  fill: var(--geo-rect3-fill);
+  fill-opacity: 0.92;
+  stroke: var(--geo-rect3-stroke);
+}
+
+.geo-part-group.colored.type-tri1 .geo-part-shape {
+  fill: var(--geo-tri1-fill);
+  fill-opacity: 0.92;
+  stroke: var(--geo-tri1-stroke);
+}
+
+.geo-part-group.colored.type-tri2 .geo-part-shape {
+  fill: var(--geo-tri2-fill);
+  fill-opacity: 0.92;
+  stroke: var(--geo-tri2-stroke);
+}
+
+/* --------------------------------------------------------------------------
+   3. АНИМАЦИЯ №3: ВЫДЕЛЕНИЕ ОТДЕЛЬНОЙ ЧАСТИ ПРИ НАЖАТИИ ИЛИ ШАГЕ
+   -------------------------------------------------------------------------- */
+
+.geo-part-group.highlighted {
+  z-index: 10;
+}
+
+.geo-part-group.highlighted .geo-part-shape {
+  stroke-width: 5px;
+  fill-opacity: 1;
+}
+
+.geo-part-group.dimmed {
+  opacity: 0.3;
+}
+
+/* Подписи частей и внутренние размеры частей */
+.geo-part-badge {
+  opacity: 0;
+  transform: scale(0.88);
+  transform-origin: center;
+  transition:
+    opacity 450ms var(--ease-smooth),
+    transform 450ms var(--ease-spring);
+  pointer-events: none;
+}
+
+.geo-part-badge.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Высота треугольника и маркер прямого угла */
+.geo-height-group {
+  opacity: 0;
+  transition: opacity 450ms var(--ease-smooth);
+  pointer-events: none;
+}
+
+.geo-height-group.visible {
+  opacity: 1;
+}
+
+.geo-height-line {
+  stroke: var(--geo-height-line);
+  stroke-width: 3px;
+  stroke-dasharray: 7 5;
+}
+
+.geo-right-angle-mark {
+  fill: rgba(2, 132, 199, 0.16);
+  stroke: var(--geo-right-angle);
+  stroke-width: 2.4px;
+}
+
+/* --------------------------------------------------------------------------
+   4. АНИМАЦИЯ №4: ПОСЛЕДОВАТЕЛЬНОЕ ПОЯВЛЕНИЕ ВЫЧИСЛЕНИЙ
+   -------------------------------------------------------------------------- */
+
+.calc-line {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 520ms var(--ease-smooth),
+    transform 520ms var(--ease-smooth),
+    background-color 350ms ease,
+    border-color 350ms ease,
+    box-shadow 350ms ease;
+}
+
+.calc-line.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.calc-line.active-focus {
+  transform: scale(1.015);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.16);
+}
+
+/* --------------------------------------------------------------------------
+   5. АНИМАЦИЯ ЗАПОЛНЕНИЯ КЛЕТКАМИ (УРОВЕНЬ 1: ПРЯМОУГОЛЬНИК 6 × 4)
+   -------------------------------------------------------------------------- */
+
+.unit-cell {
+  fill: #93C5FD;
+  stroke: #2563EB;
+  stroke-width: 1.5px;
+  opacity: 0;
+  transform: scale(0.65);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    opacity 360ms var(--ease-smooth),
+    transform 360ms var(--ease-spring),
+    fill 360ms ease;
+}
+
+.unit-cell.filled {
+  opacity: 0.88;
+  transform: scale(1);
+}
+
+.unit-cell.first-row-highlight {
+  fill: #60A5FA;
+}
+
+/* --------------------------------------------------------------------------
+   6. ИНТЕРАКТИВНЫЕ ТОЧКИ И ЛИНИИ РАЗРЕЗА (УРОВНИ 4, 5, 6)
+   -------------------------------------------------------------------------- */
+
+.geo-vertex-point {
+  fill: #FFFFFF;
+  stroke: var(--accent-rose);
+  stroke-width: 3.5px;
+  cursor: pointer;
+  transition: all 300ms var(--ease-spring);
+}
+
+.geo-vertex-point.pulsing {
+  animation: vertexPulse 1.6s infinite ease-in-out;
+}
+
+@keyframes vertexPulse {
+  0%, 100% {
+    r: 7px;
+    stroke-width: 3.5px;
+  }
+  50% {
+    r: 10px;
+    stroke-width: 5px;
+  }
+}
+
+.candidate-cut-group {
+  cursor: pointer;
+}
+
+.candidate-cut-hitarea {
+  stroke: transparent;
+  stroke-width: 28px;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.candidate-cut-visual {
+  stroke: #94A3B8;
+  stroke-width: 3.5px;
+  stroke-dasharray: 8 6;
+  stroke-linecap: round;
+  transition: all 250ms ease;
+}
+
+.candidate-cut-group:hover .candidate-cut-visual,
+.candidate-cut-group.hovered .candidate-cut-visual {
+  stroke: var(--accent-rose);
+  stroke-width: 5px;
+}
+
+.candidate-cut-group.selected-valid .candidate-cut-visual {
+  stroke: var(--geo-split-line);
+  stroke-width: 4.5px;
+  stroke-dasharray: none;
+}
+
+.candidate-cut-group.selected-invalid .candidate-cut-visual {
+  stroke: #F59E0B;
+  stroke-width: 4.5px;
+}
+
+/* --------------------------------------------------------------------------
+   7. ПОДДЕРЖКА УПРОЩЁННОГО РЕЖИМА И PREFERS-REDUCED-MOTION
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body.reduced-motion *,
+body.reduced-motion *::before,
+body.reduced-motion *::after {
+  animation-duration: 0.05s !important;
+  transition-duration: 0.05s !important;
+}

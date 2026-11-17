@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Площади сложных фигур — Интерактивный урок математики (5 класс)</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link rel="stylesheet" href="css/style.css?v=8" />
+  <link rel="stylesheet" href="css/animations.css?v=8" />
+  <link rel="stylesheet" href="css/responsive.css?v=8" />
+</head>
+<body class="mode-board">
+
+  <!-- ====================================================================
+       ШАПКА ПЛАТФОРМЫ И ШКАЛА ПРОГРЕССА УРОКА (УРОВНИ 1 → 6)
+       ==================================================================== -->
+  <header class="app-header" role="banner">
+    <div class="header-top">
+      <!-- Название урока и бренд -->
+      <div class="brand-block">
+        <div class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64" fill="none">
+            <rect x="6" y="18" width="32" height="38" rx="4" fill="#DBEAFE" stroke="#2563EB" stroke-width="4"/>
+            <polygon points="38,18 58,56 38,56" fill="#D1FAE5" stroke="#059669" stroke-width="4" stroke-linejoin="round"/>
+            <line x1="38" y1="18" x2="38" y2="56" stroke="#E11D48" stroke-width="4" stroke-dasharray="5 4"/>
+          </svg>
+        </div>
+        <div class="brand-titles">
+          <h1>Площади сложных фигур • 5 класс</h1>
+          <div class="brand-subtitle">Нахождение площади фигур из прямоугольников и треугольников</div>
+        </div>
+      </div>
+
+      <!-- Переключение главных разделов сайта -->
+      <nav class="main-mode-tabs" aria-label="Разделы урока">
+        <button type="button" class="mode-tab-btn active" data-section="lesson">
+          📚 Урок (Уровни 1–6)
+        </button>
+        <button type="button" class="mode-tab-btn" data-section="thinking">
+          🧠 Учимся думать
+        </button>
+        <button type="button" class="mode-tab-btn" data-section="trainer">
+          🎯 Тренажёр (20 задач)
+        </button>
+        <button type="button" class="mode-tab-btn" data-section="quiz">
+          🏆 Викторина (10 вопросов)
+        </button>
+        <button type="button" class="mode-tab-btn" data-section="summary">
+          ⭐ Итоги и правила
+        </button>
+      </nav>
+
+      <!-- Инструменты отображения для электронной доски -->
+      <div class="header-tools">
+        <label for="displayModeSelect" style="font-size:var(--fs-xs);font-weight:700;color:var(--text-muted);">
+          Экран:
+        </label>
+        <select id="displayModeSelect" class="display-mode-select" aria-label="Режим отображения">
+          <option value="board" selected>🖥 Электронная доска</option>
+          <option value="desktop">💻 Компьютер</option>
+          <option value="mobile">📱 Мобильный вид</option>
+        </select>
+
+        <button type="button" id="reducedMotionBtn" class="tool-pill" title="Переключить плавные или упрощённые анимации">
+          ✨ Анимации: плавные
+        </button>
+
+        <button type="button" id="fullscreenHeaderBtn" class="tool-pill" title="Открыть во весь экран">
+          ⛶ Полный экран
+        </button>
+      </div>
+    </div>
+
+    <!-- Визуальная шкала прогресса: Уровень 1 -> Уровень 2 -> Уровень 3 -> Уровень 4 -> Уровень 5 -> Уровень 6 -->
+    <div class="level-progress-bar" id="levelProgressBar">
+      <div class="levels-track" id="levelsTrackContainer" role="navigation" aria-label="Учебные уровни от простого к сложному"></div>
+    </div>
+  </header>
+
+  <!-- ====================================================================
+       ОСНОВНАЯ РАБОЧАЯ ОБЛАСТЬ ДОСКИ
+       ==================================================================== -->
+  <main class="workspace-container" id="workspaceRoot" role="main"></main>
+
+  <!-- ====================================================================
+       НИЖНЯЯ ПАНЕЛЬ УПРАВЛЕНИЯ УРОКОМ ДЛЯ УЧИТЕЛЯ И ОЗВУЧИВАНИЯ (РАЗДЕЛЫ 10, 11)
+       ==================================================================== -->
+  <footer class="teacher-dock" role="contentinfo" aria-label="Панель управления уроком для учителя">
+    <div class="teacher-dock-inner">
+      <!-- Управление шагами и анимацией -->
+      <div class="dock-group">
+        <button type="button" class="dock-btn" id="dockPrevStepBtn" title="Предыдущий шаг">
+          ◀ Назад
+        </button>
+        <button type="button" class="dock-btn dock-primary" id="dockNextStepBtn" title="Следующий шаг">
+          Далее ▶
+        </button>
+
+        <div class="dock-divider" aria-hidden="true"></div>
+
+        <button type="button" class="dock-btn dock-accent" id="dockPlayAnimBtn" title="Запустить или продолжить анимацию">
+          ▶ Запустить анимацию
+        </button>
+        <button type="button" class="dock-btn" id="dockPauseAnimBtn" title="Поставить анимацию на паузу" disabled>
+          ⏸ Пауза
+        </button>
+        <button type="button" class="dock-btn" id="dockRepeatBtn" title="Повторить объяснение с первого шага">
+          ↺ Повторить объяснение
+        </button>
+      </div>
+
+      <!-- Подсказка, Разнесение в стороны, Решение и Полный экран -->
+      <div class="dock-group">
+        <button type="button" class="dock-btn dock-primary" id="dockSeparateToggleBtn" title="Разнести простые фигуры в стороны или собрать их обратно">
+          ↔ Разнести в стороны
+        </button>
+        <button type="button" class="dock-btn" id="dockHintBtn" title="Показать методическую подсказку">
+          💡 Подсказка
+        </button>
+        <button type="button" class="dock-btn" id="dockSolutionBtn" title="Показать полное решение">
+          ✓ Решение
+        </button>
+
+        <div class="dock-divider" aria-hidden="true"></div>
+
+        <button type="button" class="dock-btn" id="dockFullscreenBtn" title="Полноэкранный режим для электронной доски">
+          ⛶ Полный экран
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Подключение логических модулей проекта -->
+  <script src="js/geometry.js?v=8"></script>
+  <script src="js/animations.js?v=8"></script>
+  <script src="js/speech.js?v=8"></script>
+  <script src="js/exercises.js?v=8"></script>
+  <script src="js/quiz.js?v=8"></script>
+  <script src="js/navigation.js?v=8"></script>
+  <script src="js/app.js?v=8"></script>
+</body>
+</html>
