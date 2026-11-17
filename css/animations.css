@@ -127,15 +127,30 @@
   }
 }
 
-/* Группы отдельных частей сложной фигуры (аппаратное ускорение GPU без тяжёлых SVG filter) */
+/* Группы отдельных частей сложной фигуры (аппаратное ускорение GPU + перетаскивание пальцем) */
+.geometry-svg {
+  touch-action: none;
+}
+
 .geo-part-group {
-  cursor: pointer;
+  cursor: grab;
+  touch-action: none;
   transform: translate3d(0px, 0px, 0px);
   transition:
-    transform 820ms var(--ease-smooth),
+    transform 650ms var(--ease-smooth),
     opacity 380ms var(--ease-gentle);
   will-change: transform, opacity;
   backface-visibility: hidden;
+}
+
+.geo-part-group:active {
+  cursor: grabbing;
+}
+
+/* Во время движения пальцем отключаем transition для мгновенного следования 1:1 за пальцем без задержки */
+.geo-part-group.dragging-now {
+  transition: opacity 200ms ease !important;
+  cursor: grabbing !important;
 }
 
 .geo-part-group.separated-shadow .geo-part-shape {

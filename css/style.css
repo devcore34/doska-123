@@ -701,6 +701,147 @@ html, body {
 .calc-math {
   font-family: var(--font-math);
   font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   СИМВОЛ ПЛОЩАДИ «S» С МАЛЕНЬКОЙ ФИГУРКОЙ В НИЖНЕМ ИНДЕКСЕ
+   Показывает ученику, площадь какой именно фигуры сейчас вычисляется
+   ========================================================================== */
+
+.s-symbol-badge {
+  display: inline-flex;
+  align-items: baseline;
+  font-family: var(--font-math);
+  font-weight: 900;
+  line-height: 1;
+  margin-right: 2px;
+  vertical-align: middle;
+}
+
+.s-main-char {
+  font-size: 1.25em;
+  color: var(--text-primary);
+  font-style: italic;
+}
+
+.s-sub-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  transform: translateY(6px);
+  margin-left: 2px;
+  background: #FFFFFF;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 2px 5px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.s-sub-mini-fig {
+  width: 24px;
+  height: 18px;
+  display: inline-block;
+  vertical-align: middle;
+  overflow: visible;
+}
+
+.s-sub-idx {
+  font-size: 0.72em;
+  font-weight: 800;
+  color: var(--text-secondary);
+  font-style: normal;
+  line-height: 1;
+}
+
+/* ==========================================================================
+   БЛОК «УСЛОВИЕ ЗАДАЧИ (ДАНО / НАЙТИ)» СБОКУ ОТ ЧЕРТЕЖА
+   ========================================================================== */
+
+.task-condition-box {
+  background: #F8FAFC;
+  border: 2px solid #CBD5E1;
+  border-left: 6px solid var(--secondary);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-condition-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #0F766E;
+}
+
+.task-condition-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--fs-sm);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.task-condition-find {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1.5px dashed #CBD5E1;
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  color: var(--primary-hover);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Кнопка поочерёдного открытия шагов решения прямо в блоке вычислений */
+.next-calc-step-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 6px;
+}
+
+.btn-reveal-step {
+  flex: 1;
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 18px;
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 50px;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.24);
+  transition: all 0.2s ease;
+}
+
+.btn-reveal-step:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.32);
+}
+
+.btn-reveal-step.all-revealed {
+  background: var(--success);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.22);
 }
 
 /* ==========================================================================

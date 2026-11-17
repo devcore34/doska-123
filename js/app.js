@@ -299,6 +299,140 @@
      ВСПОМОГАТЕЛЬНЫЙ РЕНДЕР СТАНДАРТНОЙ ДОСКИ УРОКА + ПОШАГОВОЙ ПАНЕЛИ
      ======================================================================== */
 
+  /**
+   * Добавляет в правую панель:
+   * 1) Блок «📋 Условие задачи (Дано / Найти)» сбоку от чертежа.
+   * 2) Маленькие цветные фигурки в нижнем индексе возле каждого символа площади «S»,
+   *    чтобы ученик сразу понимал, площадь какой именно фигуры сейчас вычисляется.
+   * 3) Кнопку «➕ Показать следующий шаг решения», которая по очереди открывает
+   *    шаги математического решения один за другим и подсвечивает соответствующую часть на чертеже.
+   */
+  function enhanceMathBoardWithConditionAndStepper(figure, customNote = '') {
+    if (!figure || !figure.parts) return;
+
+    // 1. Вставляем блок «📋 Условие задачи (Дано / Найти)» в правую боковую панель
+    const rightPanel = document.querySelector('.explanation-panel');
+    const mathBoard = document.querySelector('.math-board');
+    if (rightPanel && mathBoard && !document.getElementById('sideConditionCard')) {
+      const condWrapper = document.createElement('div');
+      condWrapper.id = 'sideConditionCard';
+      condWrapper.innerHTML = Geo.renderConditionBoxHTML(figure, customNote);
+      rightPanel.insertBefore(condWrapper, mathBoard);
+    }
+
+    // 2. Обновляем формулу в баннере и строки вычислений, добавляя маленькую фигурку под букву S
+    const formulaBannerExpr = document.getElementById('stepFormulaExpr');
+    if (formulaBannerExpr && figure.parts.length > 1) {
+      const totalSym = Geo.renderAreaSymbol(figure.outerContour, 'total', '');
+      const partsSyms = figure.parts
+        .map((p, i) => Geo.renderAreaSymbol(p.points, p.type, i + 1))
+        .join(' + ');
+      formulaBannerExpr.innerHTML = `${totalSym} = ${partsSyms}`;
+    } else if (formulaBannerExpr && figure.parts.length === 1) {
+      const p0 = figure.parts[0];
+      const sym0 = Geo.renderAreaSymbol(p0.points, p0.type, '');
+      const isTri = p0.type && p0.type.startsWith('tri');
+      formulaBannerExpr.innerHTML = `${sym0} = ${isTri ? '(a × h) : 2' : 'a × b'}`;
+    }
+
+    const calcContainer = document.getElementById('calcStepsContainer');
+    if (!calcContainer) return;
+
+    const calcLines = Array.from(calcContainer.querySelectorAll('.calc-line'));
+    if (calcLines.length === 0) return;
+
+    // Заменяем обычные S₁, S₂, S на символ S с маленькой фигуркой внизу!
+    calcLines.forEach((lineEl, idx) => {
+      const mathSpan = lineEl.querySelector('.calc-math');
+      if (!mathSpan) return;
+
+      if (lineEl.classList.contains('total-answer')) {
+        mathSpan.innerHTML = Geo.renderTotalCalcWithIcons(figure);
+      } else if (figure.parts[idx]) {
+        mathSpan.innerHTML = Geo.renderPartCalcWithIcon(figure.parts[idx], idx);
+      } else if (figure.parts.length === 1 && figure.parts[0]) {
+        const p0 = figure.parts[0];
+        const sym0 = Geo.renderAreaSymbol(p0.points, p0.type, '');
+        mathSpan.innerHTML = mathSpan.innerHTML.replace(/^S[пр₁₂]?\s*=/, `${sym0} =`);
+      }
+    });
+
+    // 3. Добавляем кнопку поочерёдного открытия шагов решения («➕ Показать следующий шаг решения»)
+    if (!document.getElementById('progressiveCalcStepBar')) {
+      let revealedCount = calcLines.filter((el) => el.classList.contains('visible')).length;
+
+      const stepBar = document.createElement('div');
+      stepBar.id = 'progressiveCalcStepBar';
+      stepBar.className = 'next-calc-step-bar';
+
+      const revealBtn = document.createElement('button');
+      revealBtn.type = 'button';
+      revealBtn.className = 'btn-reveal-step';
+
+      const resetBtn = document.createElement('button');
+      resetBtn.type = 'button';
+      resetBtn.className = 'subtab-btn';
+      resetBtn.style.minHeight = '50px';
+      resetBtn.textContent = '↺ Скрыть шаги';
+      resetBtn.title = 'Скрыть вычисления и начать показ по шагам заново';
+
+      function updateRevealBtnLabel() {
+        if (revealedCount >= calcLines.length) {
+          revealBtn.classList.add('all-revealed');
+          revealBtn.innerHTML = `✓ Все шаги решения открыты (${calcLines.length} из ${calcLines.length})`;
+        } else {
+          revealBtn.classList.remove('all-revealed');
+          revealBtn.innerHTML = `➕ Показать шаг решения ${revealedCount + 1} из ${calcLines.length}`;
+        }
+      }
+
+      revealBtn.addEventListener('click', () => {
+        if (window.AnimationTimeline) window.AnimationTimeline.pause();
+
+        if (revealedCount >= calcLines.length) {
+          // Если все уже открыты, начинаем по очереди с 1-го шага
+          calcLines.forEach((el) => el.classList.remove('visible', 'active-focus'));
+          revealedCount = 0;
+        }
+
+        const targetLine = calcLines[revealedCount];
+        if (targetLine) {
+          calcLines.forEach((el) => el.classList.remove('active-focus'));
+          targetLine.classList.add('visible', 'active-focus');
+
+          // Синхронно подсвечиваем или разделяем соответствующую часть на чертеже!
+          if (activeSceneController) {
+            if (revealedCount < figure.parts.length && figure.parts.length > 1) {
+              activeSceneController.drawSplitLines();
+              activeSceneController.separateParts(true);
+              activeSceneController.highlightPart(figure.parts[revealedCount].id);
+            } else if (targetLine.classList.contains('total-answer') && figure.parts.length > 1) {
+              activeSceneController.reassembleParts(true);
+            }
+          }
+        }
+
+        revealedCount++;
+        updateRevealBtnLabel();
+      });
+
+      resetBtn.addEventListener('click', () => {
+        if (window.AnimationTimeline) window.AnimationTimeline.pause();
+        calcLines.forEach((el) => el.classList.remove('visible', 'active-focus'));
+        revealedCount = 0;
+        if (activeSceneController) {
+          activeSceneController.resetToInitial();
+        }
+        updateRevealBtnLabel();
+      });
+
+      updateRevealBtnLabel();
+      stepBar.appendChild(revealBtn);
+      stepBar.appendChild(resetBtn);
+      mathBoard.insertBefore(stepBar, calcContainer);
+    }
+  }
+
   function bindTimelineToLessonDOM(steps) {
     Timeline.loadSteps(steps, {
       onStepChange: (idx, stepObj, total) => {
@@ -564,6 +698,7 @@
       ];
 
       bindTimelineToLessonDOM(rectSteps);
+      enhanceMathBoardWithConditionAndStepper(Geo.FIGURES.L1_RECT);
     } else {
       activeSceneController = Geo.renderScene(svgEl, Geo.FIGURES.L1_TRI, {
         showHeightsImmediately: false
@@ -615,6 +750,7 @@
       ];
 
       bindTimelineToLessonDOM(triSteps);
+      enhanceMathBoardWithConditionAndStepper(Geo.FIGURES.L1_TRI);
     }
 
     // Отрисовка 3 заданий мини-проверки Уровня 1 (строго по ТЗ: 5×3, 7×2, треугольник 6×4)
@@ -976,6 +1112,7 @@
     ];
 
     bindTimelineToLessonDOM(l2Steps);
+    enhanceMathBoardWithConditionAndStepper(Geo.FIGURES.L2_MAIN);
 
     // Кнопка «Показать, как соединяются 2 прямоугольника» (вводная анимация Уровня 2)
     document.getElementById('l2IntroJoinBtn').onclick = () => {
@@ -1245,6 +1382,7 @@
     ];
 
     bindTimelineToLessonDOM(l3Steps);
+    enhanceMathBoardWithConditionAndStepper(Geo.FIGURES.L3_MAIN);
 
     document.getElementById('showHowWeSplitBtn').onclick = () => {
       Speech.stop();
@@ -1684,6 +1822,7 @@
     ];
 
     bindTimelineToLessonDOM(steps11);
+    enhanceMathBoardWithConditionAndStepper(ex.figure);
 
     document.getElementById('l4Replay11StepsBtn').onclick = () => Timeline.repeat();
     document.getElementById('l4NextStepInlineBtn').onclick = () => Timeline.nextStep();
@@ -1926,6 +2065,7 @@
     ];
 
     bindTimelineToLessonDOM(l5Steps);
+    enhanceMathBoardWithConditionAndStepper(currentFig, `Способ разделения №${appState.level5Way}`);
     if (appState.level5CutUnlocked) {
       Timeline.goToStep(1, true);
     }
@@ -2212,6 +2352,15 @@
     ];
 
     bindTimelineToLessonDOM(l6Steps);
+    enhanceMathBoardWithConditionAndStepper(task.figure, task.description);
+
+    // Также добавим маленькие фигурки возле полей ввода S1, S2, ... на Уровне 6
+    root.querySelectorAll('.l6-part-inp').forEach((inp, pIdx) => {
+      const p = task.figure.parts[pIdx];
+      if (p && inp.previousElementSibling) {
+        inp.previousElementSibling.innerHTML = `${Geo.renderAreaSymbol(p.points, p.type, pIdx + 1)} =`;
+      }
+    });
 
     document.getElementById('l6ShowSplitLinesBtn').onclick = () => {
       Timeline.goToStep(1, true);
@@ -2704,12 +2853,12 @@
           </div>
         </div>
 
-        <!-- Правая колонка: Выбор формулы, ввод вычислений, проверка и разбор -->
+        <!-- Правая колонка: Условие задачи, выбор формулы, ввод вычислений, пошаговый показ решения -->
         <div class="card-panel explanation-panel">
           <div>
             <h2 class="lesson-title">${currentProb.title}</h2>
-            <div class="pedagogical-callout" style="margin-top:10px;">
-              ${currentProb.question}
+            <div style="margin-top:10px;">
+              ${Geo.renderConditionBoxHTML(currentProb.figure, currentProb.question)}
             </div>
           </div>
 
@@ -2730,24 +2879,28 @@
               </div>
             </div>
 
-            <!-- 2. Промежуточные площади частей (если фигура составная) -->
+            <!-- 2. Промежуточные площади частей (если фигура составная) с маленькими фигурками под S -->
             ${
               currentProb.partAreas.length > 1
                 ? `
               <div style="margin-top:6px;">
                 <div style="font-size:var(--fs-xs);font-weight:800;color:var(--text-secondary);margin-bottom:8px;">
-                  2. Вычисли площади частей (поможет не ошибиться):
+                  2. Вычисли площади отдельных частей (посмотри на фигурку у знака S):
                 </div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;">
                   ${currentProb.partLabels
-                    .map(
-                      (lbl, i) => `
+                    .map((lbl, i) => {
+                      const pObj = currentProb.figure.parts[i];
+                      const sIcon = pObj
+                        ? Geo.renderAreaSymbol(pObj.points, pObj.type, i + 1)
+                        : `S${i + 1}`;
+                      return `
                     <div style="display:flex;align-items:center;gap:6px;background:#FFF;padding:6px 10px;border-radius:10px;border:1px solid var(--border-color);">
-                      <span style="font-size:0.88rem;font-weight:700;">${lbl}:</span>
+                      <span style="font-size:0.92rem;font-weight:700;">${sIcon} =</span>
                       <input type="text" inputmode="numeric" class="math-input trainer-part-inp" data-p-idx="${i}" placeholder="?" style="width:68px;height:42px;font-size:var(--fs-sm);" />
                     </div>
-                  `
-                    )
+                  `;
+                    })
                     .join('')}
                 </div>
               </div>
@@ -2755,9 +2908,11 @@
                 : ''
             }
 
-            <!-- 3. Ввод итогового ответа -->
+            <!-- 3. Ввод итогового ответа с маленькой иконкой всей фигуры под S -->
             <div class="mini-input-group" style="margin-top:6px;">
-              <span style="font-weight:800;font-size:var(--fs-md);">Ответ: S =</span>
+              <span style="font-weight:800;font-size:var(--fs-md);">
+                Ответ: ${Geo.renderAreaSymbol(currentProb.figure.outerContour, 'total', '')} =
+              </span>
               <input type="text" inputmode="numeric" class="math-input" id="trainerTotalInp" placeholder="?" />
               <span style="font-weight:800;font-size:var(--fs-md);">см²</span>
               <button type="button" class="btn btn-primary" id="trainerCheckBtn">
@@ -2766,7 +2921,39 @@
             </div>
 
             <div id="trainerFeedbackBox"></div>
-            <div id="trainerDetailedSolutionBox" style="display:none;background:#FFFFFF;border:2px solid var(--primary-light);border-radius:var(--radius-sm);padding:14px;"></div>
+
+            <!-- 4. Кнопка поочерёдного показа шагов решения -->
+            <div class="next-calc-step-bar">
+              <button type="button" class="btn-reveal-step" id="trainerStepByStepBtn">
+                ➕ Показать шаг решения (по очереди)
+              </button>
+              <button type="button" class="subtab-btn" id="contextualShowSolutionBtn" style="min-height:50px;">
+                📖 Всё решение сразу
+              </button>
+            </div>
+
+            <div class="calc-steps-list" id="trainerCalcStepsList">
+              ${currentProb.figure.parts
+                .map(
+                  (p, pIdx) => `
+                <div class="calc-line part-${p.type}" data-tr-step="${pIdx}">
+                  <span>${pIdx + 1}-е действие (${p.name}):</span>
+                  <span class="calc-math">${Geo.renderPartCalcWithIcon(p, currentProb.figure.parts.length > 1 ? pIdx : '')}</span>
+                </div>
+              `
+                )
+                .join('')}
+              ${
+                currentProb.figure.parts.length > 1
+                  ? `
+                <div class="calc-line total-answer" data-tr-step="${currentProb.figure.parts.length}">
+                  <span>Складываем площади частей:</span>
+                  <span class="calc-math">${Geo.renderTotalCalcWithIcons(currentProb.figure, currentProb.answer)}</span>
+                </div>
+              `
+                  : ''
+              }
+            </div>
           </div>
 
           <div id="trainerNumpadSlot"></div>
@@ -2774,9 +2961,6 @@
           <div class="action-row" style="justify-content:space-between;">
             <button type="button" class="btn btn-secondary" id="trainerPrevBtn" ${currentProb.id <= 1 ? 'disabled' : ''}>
               ← Предыдущая задача
-            </button>
-            <button type="button" class="btn btn-secondary" id="contextualShowSolutionBtn">
-              📖 Показать подробное решение
             </button>
             <button type="button" class="btn btn-primary" id="trainerNextBtn" ${currentProb.id >= 20 ? 'disabled' : ''}>
               Следующая задача →
@@ -2871,17 +3055,53 @@
       Speech.speak(currentProb.hint);
     };
 
-    // Кнопка подробного решения
+    // Поочерёдный показ шагов решения в Тренажёре
+    const trLines = Array.from(root.querySelectorAll('#trainerCalcStepsList .calc-line'));
+    let trRevealed = 0;
+    const trStepBtn = document.getElementById('trainerStepByStepBtn');
+    if (trStepBtn) {
+      trStepBtn.onclick = () => {
+        if (trRevealed >= trLines.length) {
+          trLines.forEach((el) => el.classList.remove('visible', 'active-focus'));
+          trRevealed = 0;
+          trainerScene.resetToInitial();
+          trStepBtn.classList.remove('all-revealed');
+          trStepBtn.textContent = `➕ Показать шаг решения (1 из ${trLines.length})`;
+          return;
+        }
+        trLines.forEach((el) => el.classList.remove('active-focus'));
+        const line = trLines[trRevealed];
+        if (line) {
+          line.classList.add('visible', 'active-focus');
+          if (trRevealed < currentProb.figure.parts.length && currentProb.figure.parts.length > 1) {
+            trainerScene.drawSplitLines();
+            trainerScene.separateParts(true);
+            trainerScene.highlightPart(currentProb.figure.parts[trRevealed].id);
+          } else {
+            trainerScene.reassembleParts(true);
+          }
+        }
+        trRevealed++;
+        if (trRevealed >= trLines.length) {
+          trStepBtn.classList.add('all-revealed');
+          trStepBtn.textContent = `✓ Все шаги открыты (нажми, чтобы скрыть)`;
+        } else {
+          trStepBtn.textContent = `➕ Показать шаг решения (${trRevealed + 1} из ${trLines.length})`;
+        }
+      };
+    }
+
+    // Кнопка полного решения сразу
     document.getElementById('contextualShowSolutionBtn').onclick = () => {
       trainerScene.drawSplitLines();
       trainerScene.colorParts();
       trainerScene.separateParts(true);
-      const solBox = document.getElementById('trainerDetailedSolutionBox');
-      solBox.style.display = 'block';
-      solBox.innerHTML = `
-        <div style="font-weight:800;color:var(--primary);margin-bottom:6px;">Подробное пошаговое решение:</div>
-        ${currentProb.solutionSteps.map((s) => `<div style="margin-bottom:4px;font-weight:600;">• ${s}</div>`).join('')}
-      `;
+      trLines.forEach((el) => el.classList.add('visible'));
+      trRevealed = trLines.length;
+      if (trStepBtn) {
+        trStepBtn.classList.add('all-revealed');
+        trStepBtn.textContent = `✓ Все шаги открыты (нажми, чтобы скрыть)`;
+      }
     };
 
     // Навигация Назад / Далее

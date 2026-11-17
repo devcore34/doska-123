@@ -49,6 +49,116 @@ window.GeometryEngine = (function () {
   }
 
   /**
+   * Возвращает цвета заливки и обводки по типу фигуры
+   */
+  function getTypeColors(type) {
+    if (type === 'rect2') return { fill: '#E0E7FF', stroke: '#4F46E5' };
+    if (type === 'rect3') return { fill: '#F3E8FF', stroke: '#7C3AED' };
+    if (type === 'tri1') return { fill: '#D1FAE5', stroke: '#059669' };
+    if (type === 'tri2') return { fill: '#FEF3C7', stroke: '#D97706' };
+    if (type === 'total') return { fill: '#DCFCE7', stroke: '#059669' };
+    return { fill: '#DBEAFE', stroke: '#2563EB' };
+  }
+
+  /**
+   * Нормализует точки полигона под мини-иконку (viewBox 0 0 28 20)
+   */
+  function normalizePointsToMiniSvg(pts, boxW = 28, boxH = 20, pad = 2.5) {
+    if (!pts || pts.length === 0) return '3,3 25,3 25,17 3,17';
+    const b = getBounds(pts);
+    const spanX = Math.max(b.w, 1);
+    const spanY = Math.max(b.h, 1);
+    const availW = boxW - pad * 2;
+    const availH = boxH - pad * 2;
+    const sc = Math.min(availW / spanX, availH / spanY);
+    const ox = (boxW - spanX * sc) / 2 - b.minX * sc;
+    const oy = (boxH - spanY * sc) / 2 - b.minY * sc;
+    return pts
+      .map(([x, y]) => `${Math.round((ox + x * sc) * 10) / 10},${Math.round((oy + y * sc) * 10) / 10}`)
+      .join(' ');
+  }
+
+  /**
+   * Создаёт HTML-обозначение площади «S» с маленькой цветной фигуркой в нижнем индексе!
+   * Ребёнок сразу видит, площадь какой именно фигуры (прямоугольника, треугольника или всей фигуры) находится.
+   */
+  function renderAreaSymbol(pts, type = 'rect1', subIndex = '') {
+    const { fill, stroke } = getTypeColors(type);
+    const polyPts = normalizePointsToMiniSvg(pts, 28, 20, 2.2);
+    return `<span class="s-symbol-badge"><span class="s-main-char">S</span><span class="s-sub-box"><svg class="s-sub-mini-fig" viewBox="0 0 28 20" aria-hidden="true"><polygon points="${polyPts}" fill="${fill}" stroke="${stroke}" stroke-width="2.2" stroke-linejoin="round"/></svg>${subIndex !== '' && subIndex !== null ? `<span class="s-sub-idx">${subIndex}</span>` : ''}</span></span>`;
+  }
+
+  /**
+   * Форматирует строку вычисления части (например, S₁ = 6 × 4 = 24 см²)
+   * так, чтобы вместо обычного S₁ стоял символ S с маленькой фигуркой этой части внизу!
+   */
+  function renderPartCalcWithIcon(part, idx = 0) {
+    const sym = renderAreaSymbol(part.points, part.type, idx + 1);
+    const rhs = (part.calcText || '').replace(/^S[₁₂₃₄₅12345]?\s*=\s*/, '');
+    return `${sym} <span>= ${rhs}</span>`;
+  }
+
+  /**
+   * Форматирует итоговую формулу сложения (например, S_[вся фигура] = S_[фиг1] + S_[фиг2] = 24 + 12 = 36 см²)
+   */
+  function renderTotalCalcWithIcons(figure, customTotalArea) {
+    const parts = figure.parts || [];
+    const totalArea =
+      customTotalArea !== undefined
+        ? customTotalArea
+        : parts.reduce((acc, p) => acc + (p.area || 0), 0);
+    const totalSym = renderAreaSymbol(figure.outerContour || (parts[0] && parts[0].points), 'total', '');
+
+    if (parts.length <= 1 && parts[0]) {
+      const rhs = (parts[0].calcText || '').replace(/^S[₁₂₃₄₅12345]?\s*=\s*/, '');
+      return `${totalSym} <span>= ${rhs}</span>`;
+    }
+
+    const symSum = parts.map((p, i) => renderAreaSymbol(p.points, p.type, i + 1)).join(' + ');
+    const numSum = parts.map((p) => p.area).join(' + ');
+    return `${totalSym} <span>=</span> ${symSum} <span>= ${numSum} = <strong>${totalArea} см²</strong></span>`;
+  }
+
+  /**
+   * Генерирует блок «📋 Условие задачи (Дано / Найти)» для боковой панели
+   * с маленькими иконками фигур возле каждого обозначения площади
+   */
+  function renderConditionBoxHTML(figure, customNote = '') {
+    const parts = figure.parts || [];
+    const totalSym = renderAreaSymbol(figure.outerContour || (parts[0] && parts[0].points), 'total', '');
+
+    const givenRows = parts
+      .map((p, i) => {
+        const sym = renderAreaSymbol(p.points, p.type, parts.length > 1 ? i + 1 : '');
+        const b = getBounds(p.points);
+        const isTri = p.type && p.type.startsWith('tri');
+        const dimsDesc = isTri
+          ? `основание и высота: <strong>${b.w} см</strong> и <strong>${b.h} см</strong>`
+          : `стороны: <strong>${b.w} см</strong> и <strong>${b.h} см</strong>`;
+        return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          ${sym} <span>— ${p.name} (${dimsDesc})</span>
+        </div>`;
+      })
+      .join('');
+
+    return `
+      <div class="task-condition-box">
+        <div class="task-condition-header">
+          <span>📋 Условие задачи (Дано)</span>
+          <span>${parts.length > 1 ? `Составная фигура (${parts.length} ч.)` : 'Простая фигура'}</span>
+        </div>
+        ${customNote ? `<div style="font-size:var(--fs-xs);color:var(--text-secondary);">${customNote}</div>` : ''}
+        <div class="task-condition-list">
+          ${givenRows}
+        </div>
+        <div class="task-condition-find">
+          <span>Найти:</span> ${totalSym} <span>— общую площадь фигуры (см²)</span>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
    * Автоматическое масштабирование фигуры под размер SVG-холста (860 × 460)
    * с запасом места по краям, чтобы при разнесении частей в стороны они были
    * полностью видны вместе со своими подписями сторон.
@@ -632,9 +742,12 @@ window.GeometryEngine = (function () {
       const badgeGroup = createSvgEl('g', { class: 'geo-part-badge' });
       const shapeTypeWord = part.type && part.type.startsWith('tri') ? 'Треугольник' : 'Прямоугольник';
       const labelText = part.shortLabel || `${shapeTypeWord} S${idx + 1}`;
-      const subText = part.dimSummary || '';
-      const badgeW = Math.max(labelText.length * 9.2 + 22, subText.length * 8.2 + 20, 76);
-      const badgeH = subText ? 44 : 28;
+      const subText = (part.dimSummary || '').replace(/^S[₁₂₃₄₅12345]?\s*=\s*/, '');
+      const iconColW = 36;
+      const textColW = Math.max(labelText.length * 8.8 + 16, subText.length * 8.0 + 16, 70);
+      const badgeW = iconColW + textColW + 12;
+      const badgeH = subText ? 46 : 32;
+      const { fill: typeFill, stroke: typeStroke } = getTypeColors(part.type);
 
       badgeGroup.appendChild(
         createSvgEl('rect', {
@@ -643,18 +756,48 @@ window.GeometryEngine = (function () {
           width: badgeW,
           height: badgeH,
           rx: 9,
-          fill: 'rgba(255, 255, 255, 0.95)',
-          stroke: part.type && part.type.startsWith('tri') ? '#059669' : '#2563EB',
+          fill: 'rgba(255, 255, 255, 0.96)',
+          stroke: typeStroke,
           'stroke-width': '2'
         })
       );
 
+      // Символ S с маленькой фигуркой внизу прямо на чертеже!
+      const symOriginX = badgeX - badgeW / 2 + 10;
+      const symOriginY = badgeY + 2;
+      const sCharEl = createSvgEl('text', {
+        x: symOriginX,
+        y: symOriginY,
+        fill: '#0F172A',
+        'font-size': '17',
+        'font-weight': '900',
+        'font-style': 'italic',
+        'font-family': 'Cambria Math, Segoe UI, serif'
+      });
+      sCharEl.textContent = 'S';
+      badgeGroup.appendChild(sCharEl);
+
+      const miniSubG = createSvgEl('g', {
+        transform: `translate(${symOriginX + 11}, ${symOriginY - 5})`
+      });
+      miniSubG.appendChild(
+        createSvgEl('polygon', {
+          points: normalizePointsToMiniSvg(part.points, 20, 14, 1.5),
+          fill: typeFill,
+          stroke: typeStroke,
+          'stroke-width': '1.8',
+          'stroke-linejoin': 'round'
+        })
+      );
+      badgeGroup.appendChild(miniSubG);
+
+      const textCenterX = badgeX + iconColW / 2 - 2;
       const t1 = createSvgEl('text', {
-        x: badgeX,
+        x: textCenterX,
         y: subText ? badgeY - 4 : badgeY + 5,
         'text-anchor': 'middle',
         fill: '#0F172A',
-        'font-size': '13.5',
+        'font-size': '13',
         'font-weight': '800',
         'font-family': 'Segoe UI, sans-serif'
       });
@@ -663,7 +806,7 @@ window.GeometryEngine = (function () {
 
       if (subText) {
         const t2 = createSvgEl('text', {
-          x: badgeX,
+          x: textCenterX,
           y: badgeY + 14,
           'text-anchor': 'middle',
           fill: '#475569',
@@ -677,21 +820,162 @@ window.GeometryEngine = (function () {
 
       partGroup.appendChild(badgeGroup);
 
-      partGroup.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (typeof options.onPartClick === 'function') {
-          options.onPartClick(part, idx);
-        }
-      });
-
-      partsLayer.appendChild(partGroup);
-      partControllers[part.id] = {
+      const pcObj = {
         part,
         groupEl: partGroup,
         badgeEl: badgeGroup,
         ownDetailsEl,
-        heightEl: heightEl || rightAngleEl
+        heightEl: heightEl || rightAngleEl,
+        currentDx: 0,
+        currentDy: 0
       };
+
+      // ======================================================================
+      // ПРЯМОЕ ПЕРЕТАСКИВАНИЕ И РАЗДЕЛЕНИЕ ФИГУР ПАЛЬЦЕМ НА ДОСКЕ (Pointer Events)
+      // Ученик или учитель может просто потянуть любую часть пальцем в сторону,
+      // чтобы отделить её от общей фигуры, рассмотреть её стороны и примагнитить обратно!
+      // ======================================================================
+      let pointerActive = false;
+      let activePointerId = null;
+      let startClientX = 0;
+      let startClientY = 0;
+      let startDx = 0;
+      let startDy = 0;
+      let movedEnoughToDrag = false;
+
+      partGroup.addEventListener('pointerdown', (e) => {
+        if (e.button !== undefined && e.button !== 0) return;
+        e.stopPropagation();
+        pointerActive = true;
+        activePointerId = e.pointerId;
+        startClientX = e.clientX;
+        startClientY = e.clientY;
+        startDx = pcObj.currentDx;
+        startDy = pcObj.currentDy;
+        movedEnoughToDrag = false;
+
+        try {
+          partGroup.setPointerCapture(e.pointerId);
+        } catch (err) {}
+
+        // Поднимаем перетаскиваемую часть поверх остальных частей
+        if (partsLayer.lastElementChild !== partGroup) {
+          partsLayer.appendChild(partGroup);
+        }
+      });
+
+      partGroup.addEventListener('pointermove', (e) => {
+        if (!pointerActive || e.pointerId !== activePointerId) return;
+
+        const screenDx = e.clientX - startClientX;
+        const screenDy = e.clientY - startClientY;
+        const distScreen = Math.hypot(screenDx, screenDy);
+
+        if (!movedEnoughToDrag && distScreen > 6) {
+          movedEnoughToDrag = true;
+          partGroup.classList.add('dragging-now', 'separated-shadow');
+
+          // Если в приложении шла авто-анимация, ставим её на паузу
+          if (window.AnimationTimeline && typeof window.AnimationTimeline.pause === 'function') {
+            window.AnimationTimeline.pause();
+          }
+
+          // Автоматически включаем режим разделения фигуры прямо под пальцем!
+          separatedState = true;
+          controller.colorParts();
+          controller.drawSplitLines();
+          if (outerPoly) outerPoly.classList.add('faded');
+          if ((figure.parts || []).length > 1) {
+            dimsLayer.classList.add('hidden-on-separate');
+            splitLinesLayer.classList.add('faded-on-separate');
+          }
+
+          // Показываем индивидуальные размеры и формулу у оттягиваемой части
+          pcObj.badgeEl.classList.add('visible');
+          if (pcObj.ownDetailsEl && (figure.parts || []).length > 1) {
+            pcObj.ownDetailsEl.classList.add('visible');
+          }
+          if (pcObj.heightEl) {
+            pcObj.heightEl.classList.add('visible');
+          }
+          updateDragHintBadge();
+        }
+
+        if (movedEnoughToDrag) {
+          const rect = svgEl.getBoundingClientRect();
+          const scaleX = rect.width > 0 ? viewW / rect.width : 1;
+          const scaleY = rect.height > 0 ? viewH / rect.height : 1;
+
+          const rawDx = startDx + screenDx * scaleX;
+          const rawDy = startDy + screenDy * scaleY;
+
+          // Мягкое ограничение, чтобы фигуру нельзя было увести за пределы экрана доски
+          const clampedDx = Math.max(-280, Math.min(280, Math.round(rawDx)));
+          const clampedDy = Math.max(-180, Math.min(180, Math.round(rawDy)));
+
+          pcObj.currentDx = clampedDx;
+          pcObj.currentDy = clampedDy;
+          partGroup.style.transform = `translate3d(${clampedDx}px, ${clampedDy}px, 0px)`;
+        }
+      });
+
+      function finishPointerInteraction(e) {
+        if (!pointerActive || (e && e.pointerId !== undefined && e.pointerId !== activePointerId)) return;
+        pointerActive = false;
+        partGroup.classList.remove('dragging-now');
+
+        try {
+          if (activePointerId !== null) {
+            partGroup.releasePointerCapture(activePointerId);
+          }
+        } catch (err) {}
+        activePointerId = null;
+
+        if (movedEnoughToDrag) {
+          // Магнитное притяжение: если часть вернули близко к исходному месту (< 26px),
+          // она плавно «примагничивается» точно в контур (0, 0)!
+          if (Math.hypot(pcObj.currentDx, pcObj.currentDy) < 26) {
+            pcObj.currentDx = 0;
+            pcObj.currentDy = 0;
+            partGroup.style.transform = 'translate3d(0px, 0px, 0px)';
+            partGroup.classList.remove('separated-shadow');
+            if (pcObj.ownDetailsEl) {
+              pcObj.ownDetailsEl.classList.remove('visible');
+            }
+          }
+
+          // Проверяем, остались ли ещё отодвинутые части
+          const anyStillMoved = Object.values(partControllers).some(
+            (item) => Math.hypot(item.currentDx || 0, item.currentDy || 0) >= 26
+          );
+          separatedState = anyStillMoved;
+
+          if (!anyStillMoved) {
+            if (outerPoly) outerPoly.classList.remove('faded');
+            dimsLayer.classList.remove('hidden-on-separate');
+            splitLinesLayer.classList.remove('faded-on-separate');
+          }
+          updateDragHintBadge();
+
+          const dockSepBtn = document.getElementById('dockSeparateToggleBtn');
+          if (dockSepBtn) {
+            dockSepBtn.textContent = separatedState ? '↩ Собрать обратно' : '↔ Разнести в стороны';
+          }
+        } else {
+          // Обычное короткое нажатие пальцем без перетаскивания
+          if (typeof options.onPartClick === 'function') {
+            options.onPartClick(part, idx);
+          } else {
+            controller.highlightPart(part.id);
+          }
+        }
+      }
+
+      partGroup.addEventListener('pointerup', finishPointerInteraction);
+      partGroup.addEventListener('pointercancel', finishPointerInteraction);
+
+      partsLayer.appendChild(partGroup);
+      partControllers[part.id] = pcObj;
     });
 
     svgEl.appendChild(partsLayer);
@@ -853,6 +1137,145 @@ window.GeometryEngine = (function () {
     });
     svgEl.appendChild(dimsLayer);
 
+    // 9. Интерактивная плашка-подсказка в правом нижнем углу чертежа (для фигур из 2+ частей):
+    // показывает, что части можно тянуть пальцем, и позволяет одним касанием собрать их на место
+    let dragHintTextEl = null;
+    let dragHintRectEl = null;
+    function updateDragHintBadge() {
+      if (!dragHintTextEl || !dragHintRectEl) return;
+      if (separatedState) {
+        dragHintTextEl.textContent = '↩ Коснись здесь, чтобы собрать фигуры на место';
+        dragHintRectEl.setAttribute('stroke', '#2563EB');
+        dragHintRectEl.setAttribute('fill', '#EFF6FF');
+        dragHintTextEl.setAttribute('fill', '#1D4ED8');
+      } else {
+        dragHintTextEl.textContent = '🖐 Тяни части фигуры пальцем в стороны!';
+        dragHintRectEl.setAttribute('stroke', '#CBD5E1');
+        dragHintRectEl.setAttribute('fill', '#FFFFFF');
+        dragHintTextEl.setAttribute('fill', '#334155');
+      }
+    }
+
+    if ((figure.parts || []).length > 1 && options.showGrid !== false) {
+      const hintW = 305;
+      const hintH = 28;
+      const hintGroup = createSvgEl('g', {
+        transform: `translate(${viewW - hintW - 14}, ${viewH - 36})`,
+        style: 'cursor: pointer;'
+      });
+      dragHintRectEl = createSvgEl('rect', {
+        x: 0,
+        y: 0,
+        width: hintW,
+        height: hintH,
+        rx: 8,
+        fill: '#FFFFFF',
+        stroke: '#CBD5E1',
+        'stroke-width': '1.5'
+      });
+      dragHintTextEl = createSvgEl('text', {
+        x: hintW / 2,
+        y: 18,
+        'text-anchor': 'middle',
+        fill: '#334155',
+        'font-size': '12.5',
+        'font-weight': '800',
+        'font-family': 'Segoe UI, sans-serif'
+      });
+      dragHintTextEl.textContent = '🖐 Тяни части фигуры пальцем в стороны!';
+      hintGroup.appendChild(dragHintRectEl);
+      hintGroup.appendChild(dragHintTextEl);
+
+      hintGroup.addEventListener('click', (e) => {
+        e.stopPropagation();
+        controller.toggleSeparate();
+        const dockSepBtn = document.getElementById('dockSeparateToggleBtn');
+        if (dockSepBtn) {
+          dockSepBtn.textContent = separatedState ? '↩ Собрать обратно' : '↔ Разнести в стороны';
+        }
+      });
+
+      svgEl.appendChild(hintGroup);
+    }
+
+    // 10. Жест «Разрез пальцем»: если провести пальцем линию через фигуру (начиная с сетки вокруг неё),
+    // за пальцем тянется пунктирная линия разреза, которая разделяет фигуру на части!
+    if ((figure.parts || []).length > 1) {
+      let sliceActive = false;
+      let slicePointerId = null;
+      let sx1 = 0;
+      let sy1 = 0;
+      const sliceLineEl = createSvgEl('line', {
+        x1: 0,
+        y1: 0,
+        x2: 0,
+        y2: 0,
+        stroke: '#E11D48',
+        'stroke-width': '4',
+        'stroke-dasharray': '8 6',
+        'stroke-linecap': 'round',
+        opacity: '0',
+        'pointer-events': 'none'
+      });
+      svgEl.appendChild(sliceLineEl);
+
+      function clientToSvg(clientX, clientY) {
+        const rect = svgEl.getBoundingClientRect();
+        const x = rect.width > 0 ? ((clientX - rect.left) * viewW) / rect.width : 0;
+        const y = rect.height > 0 ? ((clientY - rect.top) * viewH) / rect.height : 0;
+        return [Math.round(x), Math.round(y)];
+      }
+
+      svgEl.addEventListener('pointerdown', (e) => {
+        if (e.button !== undefined && e.button !== 0) return;
+        sliceActive = true;
+        slicePointerId = e.pointerId;
+        const [x, y] = clientToSvg(e.clientX, e.clientY);
+        sx1 = x;
+        sy1 = y;
+        sliceLineEl.setAttribute('x1', x);
+        sliceLineEl.setAttribute('y1', y);
+        sliceLineEl.setAttribute('x2', x);
+        sliceLineEl.setAttribute('y2', y);
+        sliceLineEl.setAttribute('opacity', '0.9');
+        try {
+          svgEl.setPointerCapture(e.pointerId);
+        } catch (err) {}
+      });
+
+      svgEl.addEventListener('pointermove', (e) => {
+        if (!sliceActive || e.pointerId !== slicePointerId) return;
+        const [x2, y2] = clientToSvg(e.clientX, e.clientY);
+        sliceLineEl.setAttribute('x2', x2);
+        sliceLineEl.setAttribute('y2', y2);
+      });
+
+      function endSliceGesture(e) {
+        if (!sliceActive || (e && e.pointerId !== undefined && e.pointerId !== slicePointerId)) return;
+        sliceActive = false;
+        sliceLineEl.setAttribute('opacity', '0');
+        try {
+          if (slicePointerId !== null) svgEl.releasePointerCapture(slicePointerId);
+        } catch (err) {}
+        slicePointerId = null;
+
+        const [x2, y2] = clientToSvg(e.clientX, e.clientY);
+        const len = Math.hypot(x2 - sx1, y2 - sy1);
+        if (len > 45) {
+          controller.drawSplitLines();
+          controller.colorParts();
+          controller.separateParts(true);
+          const dockSepBtn = document.getElementById('dockSeparateToggleBtn');
+          if (dockSepBtn) {
+            dockSepBtn.textContent = '↩ Собрать обратно';
+          }
+        }
+      }
+
+      svgEl.addEventListener('pointerup', endSliceGesture);
+      svgEl.addEventListener('pointercancel', endSliceGesture);
+    }
+
     // API управления сценой
     const controller = {
       tf,
@@ -878,8 +1301,10 @@ window.GeometryEngine = (function () {
         splitLinesLayer.classList.remove('faded-on-separate');
 
         Object.values(partControllers).forEach((pc) => {
+          pc.currentDx = 0;
+          pc.currentDy = 0;
           pc.groupEl.classList.add('uncoloured');
-          pc.groupEl.classList.remove('colored', 'highlighted', 'dimmed', 'separated-shadow');
+          pc.groupEl.classList.remove('colored', 'highlighted', 'dimmed', 'separated-shadow', 'dragging-now');
           pc.groupEl.style.transform = 'translate3d(0px, 0px, 0px)';
           pc.badgeEl.classList.remove('visible');
           if (pc.ownDetailsEl) pc.ownDetailsEl.classList.remove('visible');
@@ -887,6 +1312,7 @@ window.GeometryEngine = (function () {
             pc.heightEl.classList.remove('visible');
           }
         });
+        updateDragHintBadge();
         splitLineControllers.forEach((sc) => {
           sc.lineEl.classList.remove('drawing');
           sc.dashedOverlay.classList.remove('visible');
@@ -952,6 +1378,8 @@ window.GeometryEngine = (function () {
           pc.groupEl.classList.remove('uncoloured');
           pc.groupEl.classList.add('colored', 'separated-shadow');
           const [dx, dy] = pc.part.sepOffset || [0, 0];
+          pc.currentDx = dx;
+          pc.currentDy = dy;
           pc.groupEl.style.transform = `translate3d(${dx}px, ${dy}px, 0px)`;
           if (showBadges) {
             pc.badgeEl.classList.add('visible');
@@ -963,6 +1391,7 @@ window.GeometryEngine = (function () {
             pc.heightEl.classList.add('visible');
           }
         });
+        updateDragHintBadge();
       },
 
       /**
@@ -977,8 +1406,10 @@ window.GeometryEngine = (function () {
         splitLinesLayer.classList.remove('faded-on-separate');
 
         Object.values(partControllers).forEach((pc) => {
+          pc.currentDx = 0;
+          pc.currentDy = 0;
           pc.groupEl.style.transform = 'translate3d(0px, 0px, 0px)';
-          pc.groupEl.classList.remove('highlighted', 'dimmed', 'separated-shadow');
+          pc.groupEl.classList.remove('highlighted', 'dimmed', 'separated-shadow', 'dragging-now');
           if (pc.ownDetailsEl) {
             pc.ownDetailsEl.classList.remove('visible');
           }
@@ -986,6 +1417,7 @@ window.GeometryEngine = (function () {
             pc.badgeEl.classList.add('visible');
           }
         });
+        updateDragHintBadge();
       },
 
       /**
@@ -2609,6 +3041,10 @@ window.GeometryEngine = (function () {
   return {
     FIGURES,
     renderScene,
+    renderAreaSymbol,
+    renderPartCalcWithIcon,
+    renderTotalCalcWithIcons,
+    renderConditionBoxHTML,
     makeRectFigure,
     makeRightTriFigure,
     makeIsoTriFigure,
