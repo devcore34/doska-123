@@ -332,20 +332,19 @@
     if (calcLines.length === 0) return;
 
     // Заменяем обычные S₁, S₂, S на символ S с маленькой фигуркой внизу!
-    calcLines.forEach((lineEl, idx) => {
-      const mathSpan = lineEl.querySelector('.calc-math');
-      if (!mathSpan) return;
+    const isLevel1Basic = figure.id === 'L1_RECT' || figure.id === 'L1_TRI';
+    if (!isLevel1Basic) {
+      calcLines.forEach((lineEl, idx) => {
+        const mathSpan = lineEl.querySelector('.calc-math');
+        if (!mathSpan) return;
 
-      if (lineEl.classList.contains('total-answer')) {
-        mathSpan.innerHTML = Geo.renderTotalCalcWithIcons(figure);
-      } else if (figure.parts[idx]) {
-        mathSpan.innerHTML = Geo.renderPartCalcWithIcon(figure.parts[idx], idx);
-      } else if (figure.parts.length === 1 && figure.parts[0]) {
-        const p0 = figure.parts[0];
-        const sym0 = Geo.renderAreaSymbol(p0.points, p0.type, '');
-        mathSpan.innerHTML = mathSpan.innerHTML.replace(/^S[пр₁₂]?\s*=/, `${sym0} =`);
-      }
-    });
+        if (lineEl.classList.contains('total-answer')) {
+          mathSpan.innerHTML = Geo.renderTotalCalcWithIcons(figure);
+        } else if (figure.parts[idx]) {
+          mathSpan.innerHTML = Geo.renderPartCalcWithIcon(figure.parts[idx], idx);
+        }
+      });
+    }
 
     // 3. Добавляем кнопку поочерёдного открытия шагов решения («➕ Показать следующий шаг решения»)
     if (!document.getElementById('progressiveCalcStepBar')) {
@@ -392,7 +391,29 @@
 
           // Синхронно подсвечиваем или разделяем соответствующую часть на чертеже!
           if (activeSceneController) {
-            if (revealedCount < figure.parts.length && figure.parts.length > 1) {
+            if (figure.id === 'L1_RECT') {
+              if (revealedCount === 0) {
+                activeSceneController.resetToInitial();
+                activeSceneController.colorParts('p1');
+                activeSceneController.fillUnitRow(0);
+              } else if (revealedCount === 1) {
+                activeSceneController.fillAllUnitCells();
+              } else {
+                activeSceneController.fillAllUnitCells();
+                activeSceneController.partControllers.p1.badgeEl.classList.add('visible');
+              }
+            } else if (figure.id === 'L1_TRI') {
+              if (revealedCount === 0) {
+                activeSceneController.resetToInitial();
+              } else if (revealedCount === 1) {
+                activeSceneController.drawSplitLines(0);
+                activeSceneController.colorParts();
+                activeSceneController.separateParts(true);
+              } else {
+                activeSceneController.separateParts(true);
+                activeSceneController.highlightPart('p1');
+              }
+            } else if (revealedCount < figure.parts.length && figure.parts.length > 1) {
               activeSceneController.drawSplitLines();
               activeSceneController.separateParts(true);
               activeSceneController.highlightPart(figure.parts[revealedCount].id);
@@ -536,29 +557,29 @@
                   ? `
                 <div class="calc-line part-rect1" data-reveal-step="1" data-focus-step="1">
                   <span>1 ряд клеток (длина a):</span>
-                  <span class="calc-math">6 клеток (6 см)</span>
+                  <span class="calc-math">a = 6 см (6 клеток в ряду)</span>
                 </div>
                 <div class="calc-line part-rect1" data-reveal-step="2" data-focus-step="2">
                   <span>Количество рядов (ширина b):</span>
-                  <span class="calc-math">4 ряда по 6 клеток</span>
+                  <span class="calc-math">b = 4 см (4 ряда по 6 клеток)</span>
                 </div>
                 <div class="calc-line total-answer" data-reveal-step="3" data-focus-step="3">
-                  <span>Пошаговое решение:</span>
-                  <span class="calc-math">S = 6 × 4 = 24 см²</span>
+                  <span>Площадь прямоугольника:</span>
+                  <span class="calc-math">${Geo.renderAreaSymbol(Geo.FIGURES.L1_RECT.parts[0].points, 'rect1', '')} = a × b = 6 × 4 = 24 см²</span>
                 </div>
               `
                   : `
                 <div class="calc-line part-rect2" data-reveal-step="0" data-focus-step="0">
                   <span>Площадь всего прямоугольника:</span>
-                  <span class="calc-math">Sпр = 8 × 4 = 32 см²</span>
+                  <span class="calc-math">${Geo.renderAreaSymbol(Geo.FIGURES.L1_TRI.outerContour, 'rect1', 'пр')} = 8 × 4 = 32 см²</span>
                 </div>
                 <div class="calc-line part-tri1" data-reveal-step="2" data-focus-step="2">
                   <span>Треугольник — половина прямоугольника:</span>
-                  <span class="calc-math">S = (a × h) : 2</span>
+                  <span class="calc-math">${Geo.renderAreaSymbol(Geo.FIGURES.L1_TRI.parts[0].points, 'tri1', '')} = (a × h) : 2</span>
                 </div>
                 <div class="calc-line total-answer" data-reveal-step="3" data-focus-step="3">
-                  <span>Ответ:</span>
-                  <span class="calc-math">S = (8 × 4) : 2 = 16 см²</span>
+                  <span>Ответ (площадь треугольника):</span>
+                  <span class="calc-math">${Geo.renderAreaSymbol(Geo.FIGURES.L1_TRI.parts[0].points, 'tri1', '')} = (8 × 4) : 2 = 16 см²</span>
                 </div>
               `
               }
