@@ -814,6 +814,12 @@
       const card = document.createElement('div');
       card.className = 'mini-task-card';
 
+      const p0 = task.figure.parts[0];
+      const p1 = task.figure.parts[1];
+      const s1Sym = p0 ? Geo.renderAreaSymbol(p0.points, p0.type, 1) : 'S₁';
+      const s2Sym = p1 ? Geo.renderAreaSymbol(p1.points, p1.type, 2) : 'S₂';
+      const totalSym = Geo.renderAreaSymbol(task.figure.outerContour, 'total', '');
+
       card.innerHTML = `
         <div style="font-weight:800;font-size:var(--fs-sm);color:var(--text-primary);">${task.title}</div>
         <div class="mini-task-svg-box">
@@ -823,20 +829,23 @@
           task.partsExpected
             ? `
           <div class="mini-input-group" style="font-size:var(--fs-xs);font-weight:700;">
-            <span>S₁ =</span>
+            <span>${s1Sym} =</span>
             <input type="text" inputmode="numeric" class="math-input" id="inp_s1_${task.id}" placeholder="?" style="width:70px;height:44px;" />
-            <span>S₂ =</span>
+            <span>${s2Sym} =</span>
             <input type="text" inputmode="numeric" class="math-input" id="inp_s2_${task.id}" placeholder="?" style="width:70px;height:44px;" />
           </div>
         `
             : ''
         }
         <div class="mini-input-group">
-          <span style="font-weight:800;font-size:var(--fs-sm);">S =</span>
+          <span style="font-weight:800;font-size:var(--fs-sm);">${totalSym} =</span>
           <input type="text" inputmode="numeric" class="math-input" id="inp_total_${task.id}" placeholder="Ответ" />
           <span style="font-weight:800;font-size:var(--fs-sm);">см²</span>
-          <button type="button" class="btn btn-primary" id="btn_chk_${task.id}" style="min-height:48px;padding:8px 16px;">
+          <button type="button" class="btn btn-primary" id="btn_chk_${task.id}" style="min-height:44px;padding:8px 14px;">
             Проверить
+          </button>
+          <button type="button" class="btn btn-secondary" id="btn_sol_${task.id}" style="min-height:44px;padding:8px 12px;">
+            ✓ Решение
           </button>
         </div>
         <div id="fb_${task.id}"></div>
@@ -894,6 +903,16 @@
       };
 
       card.querySelector(`#btn_chk_${task.id}`).onclick = doCheck;
+      card.querySelector(`#btn_sol_${task.id}`).onclick = () => {
+        if (task.partsExpected && s1Inp && s2Inp) {
+          s1Inp.value = String(task.partsExpected[0]);
+          s2Inp.value = String(task.partsExpected[1]);
+        }
+        totalInp.value = String(task.expected);
+        card.classList.add('solved');
+        const fbEl = card.querySelector(`#fb_${task.id}`);
+        fbEl.innerHTML = `<div class="feedback-banner success">✓ Решение: ${task.hint} <strong>Ответ: ${task.expected} см²</strong></div>`;
+      };
       totalInp.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') doCheck();
       });
@@ -2941,25 +2960,39 @@
             </div>
 
             <div class="calc-steps-list" id="trainerCalcStepsList">
-              ${currentProb.figure.parts
-                .map(
-                  (p, pIdx) => `
-                <div class="calc-line part-${p.type}" data-tr-step="${pIdx}">
-                  <span>${pIdx + 1}-е действие (${p.name}):</span>
-                  <span class="calc-math">${Geo.renderPartCalcWithIcon(p, currentProb.figure.parts.length > 1 ? pIdx : '')}</span>
-                </div>
-              `
-                )
-                .join('')}
               ${
-                currentProb.figure.parts.length > 1
-                  ? `
-                <div class="calc-line total-answer" data-tr-step="${currentProb.figure.parts.length}">
-                  <span>Складываем площади частей:</span>
-                  <span class="calc-math">${Geo.renderTotalCalcWithIcons(currentProb.figure, currentProb.answer)}</span>
-                </div>
-              `
-                  : ''
+                currentProb.figure.parts.length === 1
+                  ? (() => {
+                      const p0 = currentProb.figure.parts[0];
+                      const sym0 = Geo.renderAreaSymbol(p0.points, p0.type, '');
+                      const isTri = p0.type && p0.type.startsWith('tri');
+                      return `
+                        <div class="calc-line part-${p0.type}" data-tr-step="0">
+                          <span>1-й шаг (выбираем формулу):</span>
+                          <span class="calc-math">${sym0} = ${isTri ? '(a × h) : 2' : 'a × b'}</span>
+                        </div>
+                        <div class="calc-line total-answer" data-tr-step="1">
+                          <span>2-й шаг (вычисляем и пишем ответ):</span>
+                          <span class="calc-math">${Geo.renderPartCalcWithIcon(p0, '')} (Ответ: ${currentProb.answer} см²)</span>
+                        </div>
+                      `;
+                    })()
+                  : `
+                    ${currentProb.figure.parts
+                      .map(
+                        (p, pIdx) => `
+                      <div class="calc-line part-${p.type}" data-tr-step="${pIdx}">
+                        <span>${pIdx + 1}-е действие (${p.name}):</span>
+                        <span class="calc-math">${Geo.renderPartCalcWithIcon(p, pIdx)}</span>
+                      </div>
+                    `
+                      )
+                      .join('')}
+                    <div class="calc-line total-answer" data-tr-step="${currentProb.figure.parts.length}">
+                      <span>Итоговое сложение и ответ:</span>
+                      <span class="calc-math">${Geo.renderTotalCalcWithIcons(currentProb.figure, currentProb.answer)}</span>
+                    </div>
+                  `
               }
             </div>
           </div>

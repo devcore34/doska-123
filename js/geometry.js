@@ -124,19 +124,23 @@ window.GeometryEngine = (function () {
    * с маленькими иконками фигур возле каждого обозначения площади
    */
   function renderConditionBoxHTML(figure, customNote = '') {
-    const parts = figure.parts || [];
-    const totalSym = renderAreaSymbol(figure.outerContour || (parts[0] && parts[0].points), 'total', '');
+    const isL1Tri = figure.id === 'L1_TRI';
+    const parts = isL1Tri ? [figure.parts[0]] : figure.parts || [];
+    const totalSym = isL1Tri
+      ? renderAreaSymbol(figure.parts[0].points, 'tri1', '')
+      : renderAreaSymbol(figure.outerContour || (parts[0] && parts[0].points), 'total', '');
 
     const givenRows = parts
       .map((p, i) => {
         const sym = renderAreaSymbol(p.points, p.type, parts.length > 1 ? i + 1 : '');
         const b = getBounds(p.points);
         const isTri = p.type && p.type.startsWith('tri');
+        const hasDimsInName = /см|\d/.test(p.name || '');
         const dimsDesc = isTri
-          ? `основание и высота: <strong>${b.w} см</strong> и <strong>${b.h} см</strong>`
-          : `стороны: <strong>${b.w} см</strong> и <strong>${b.h} см</strong>`;
+          ? `основание a = ${b.w} см, высота h = ${b.h} см`
+          : `длина a = ${b.w} см, ширина b = ${b.h} см`;
         return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          ${sym} <span>— ${p.name} (${dimsDesc})</span>
+          ${sym} <span>— <strong>${p.name}</strong>${hasDimsInName ? '' : ` (${dimsDesc})`}</span>
         </div>`;
       })
       .join('');
@@ -152,7 +156,7 @@ window.GeometryEngine = (function () {
           ${givenRows}
         </div>
         <div class="task-condition-find">
-          <span>Найти:</span> ${totalSym} <span>— общую площадь фигуры (см²)</span>
+          <span>Найти:</span> ${totalSym} <span>— ${isL1Tri ? 'площадь треугольника (см²)' : 'общую площадь фигуры (см²)'}</span>
         </div>
       </div>
     `;
