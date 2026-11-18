@@ -107,6 +107,7 @@ input,
 
 html, body {
   width: 100%;
+  max-width: 100vw;
   min-height: 100vh;
   overflow-x: hidden;
   background-color: var(--bg-main);
@@ -372,17 +373,21 @@ html, body {
    ========================================================================== */
 
 .workspace-container {
+  width: 100%;
   max-width: 1860px;
   margin: 0 auto;
   padding: 18px 24px 240px;
+  overflow-x: hidden;
 }
 
 /* Главная двухколоночная сетка урока: слева огромная геометрия, справа пошаговый разбор */
 .board-layout {
   display: grid;
-  grid-template-columns: minmax(58%, 1.45fr) minmax(38%, 1fr);
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
   gap: 24px;
   align-items: start;
+  width: 100%;
+  max-width: 100%;
 }
 
 /* Карточки */
@@ -394,6 +399,8 @@ html, body {
   padding: 24px;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* ==========================================================================
@@ -460,21 +467,23 @@ html, body {
 /* Контейнер самого SVG */
 .svg-canvas-wrapper {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   height: 420px;
   background: radial-gradient(circle at center, #FFFFFF 0%, #F8FAFC 100%);
   border: 2px solid var(--border-color);
   border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   position: relative;
   overflow: hidden;
   padding: 8px;
 }
 
 .geometry-svg {
-  width: 100%;
-  height: 100%;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: 100% !important;
   display: block;
   overflow: visible;
   user-select: none;
@@ -962,13 +971,15 @@ html, body {
 }
 
 .mini-task-svg-box {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   height: 155px;
   background: #FFFFFF;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
+  overflow: hidden;
   padding: 8px;
 }
 

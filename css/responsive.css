@@ -1,6 +1,7 @@
 /* ==========================================================================
    АДАПТАЦИЯ ПОД ЭЛЕКТРОННУЮ ДОСКУ (1920×1080, 1600×900, 1366×768),
    КОМПЬЮТЕРНЫЙ И МОБИЛЬНЫЙ РЕЖИМЫ (ТЕЛЕФОНЫ И ПЛАНШЕТЫ) (responsive.css)
+   Строгий контроль ширины (minmax(0, 1fr)), чтобы интерфейс никогда не выходил за экран телефона!
    ========================================================================== */
 
 /* 1. Режим большой интерактивной доски 1920×1080 */
@@ -11,7 +12,7 @@
   }
 
   .board-layout {
-    grid-template-columns: 1.52fr 1fr;
+    grid-template-columns: minmax(0, 1.52fr) minmax(0, 1fr);
     gap: 28px;
   }
 
@@ -28,7 +29,7 @@
   }
 }
 
-/* 2. Электронная доска 1600×900 и 1366×768 (компактная по высоте, без лишней прокрутки) */
+/* 2. Электронная доска 1600×900 и 1366×768 */
 @media (min-width: 1120px) and (max-height: 920px) {
   .app-header {
     padding: 8px 20px;
@@ -91,7 +92,7 @@
   }
 
   .board-layout {
-    grid-template-columns: 1.35fr 1fr;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
     gap: 18px;
   }
 
@@ -108,7 +109,7 @@
 /* 3. Режим электронной доски (для широких экранов > 1080px) */
 @media (min-width: 1081px) {
   body.mode-board .board-layout {
-    grid-template-columns: 1.5fr 1fr;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
   }
 
   body.mode-board .btn,
@@ -130,101 +131,160 @@
 }
 
 /* ==========================================================================
-   4. МОБИЛЬНЫЙ РЕЖИМ И АДАПТАЦИЯ ПОД СМАРТФОНЫ И ПЛАНШЕТЫ
-   Все фигуры так же разделяются и двигаются пальцем на экране телефона!
+   4. МОБИЛЬНЫЙ РЕЖИМ И ПОЛНАЯ ОПТИМИЗАЦИЯ ПОД ТЕЛЕФОНЫ (БЕЗ ВЫХОДА ЗА ЭКРАН!)
    ========================================================================== */
 
 body.mode-mobile {
-  --fs-xs: 0.84rem;
-  --fs-sm: 0.94rem;
-  --fs-base: 1.02rem;
-  --fs-md: 1.12rem;
-  --fs-lg: 1.28rem;
-  --fs-xl: 1.48rem;
-  --fs-2xl: 1.7rem;
-  --fs-formula: 1.24rem;
+  --fs-xs: 0.8rem;
+  --fs-sm: 0.88rem;
+  --fs-base: 0.95rem;
+  --fs-md: 1.04rem;
+  --fs-lg: 1.18rem;
+  --fs-xl: 1.35rem;
+  --fs-2xl: 1.5rem;
+  --fs-formula: 1.1rem;
+}
+
+body.mode-mobile .app-header,
+body.mode-mobile .workspace-container,
+body.mode-mobile .board-layout,
+body.mode-mobile .card-panel,
+body.mode-mobile .geometry-stage-card,
+body.mode-mobile .explanation-panel,
+body.mode-mobile .math-board,
+body.mode-mobile .task-condition-box,
+body.mode-mobile .mini-check-section {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
 }
 
 body.mode-mobile .workspace-container {
-  max-width: 620px;
+  max-width: 600px !important;
   margin: 0 auto;
-  padding: 10px 10px 175px;
+  padding: 8px 8px 165px !important;
+  overflow-x: hidden !important;
 }
 
 body.mode-mobile .board-layout {
-  grid-template-columns: 1fr !important;
-  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 12px;
 }
 
 body.mode-mobile .mini-check-grid,
 body.mode-mobile .summary-rules-grid {
-  grid-template-columns: 1fr !important;
-  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 12px;
 }
 
 body.mode-mobile .geometry-stage-card {
   min-height: auto;
-  padding: 12px;
+  padding: 10px;
 }
 
 body.mode-mobile .svg-canvas-wrapper {
-  height: auto !important;
-  aspect-ratio: 860 / 480;
-  min-height: 230px;
-  max-height: 340px;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: clamp(210px, 54vw, 310px) !important;
   padding: 4px;
 }
 
 body.mode-mobile .card-panel {
-  padding: 14px;
-  border-radius: 16px;
+  padding: 12px;
+  border-radius: 14px;
 }
 
-body.mode-mobile .main-mode-tabs,
-body.mode-mobile .levels-track {
-  display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  gap: 6px;
-  padding-bottom: 4px;
-}
-
-body.mode-mobile .main-mode-tabs::-webkit-scrollbar,
-body.mode-mobile .levels-track::-webkit-scrollbar {
-  display: none;
+body.mode-mobile .main-mode-tabs {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 5px;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: visible !important;
 }
 
 body.mode-mobile .mode-tab-btn {
-  flex: 0 0 auto;
-  white-space: nowrap;
-  padding: 6px 12px;
+  width: 100% !important;
+  min-width: 0 !important;
+  white-space: normal !important;
+  padding: 6px 8px;
   min-height: 36px;
-  font-size: 0.86rem;
+  font-size: 0.78rem;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.15;
+}
+
+body.mode-mobile .mode-tab-btn:last-child {
+  grid-column: span 2;
+}
+
+body.mode-mobile .levels-track {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 5px;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: visible !important;
 }
 
 body.mode-mobile .level-step-btn {
-  flex: 0 0 auto;
-  min-width: 132px;
-  padding: 6px 10px;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 5px 6px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  text-align: left;
+  gap: 6px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+body.mode-mobile .level-step-info {
+  width: auto;
+  align-items: flex-start;
+  overflow: hidden;
+}
+
+body.mode-mobile .level-step-label {
+  display: block;
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
+body.mode-mobile .level-step-title {
+  display: none !important;
 }
 
 body.mode-mobile .level-arrow {
-  display: none;
+  display: none !important;
 }
 
-/* 5. Автоматические медиа-запросы для планшетов и смартфонов (до 1080px и до 680px) */
+body.mode-mobile .btn,
+body.mode-mobile .btn-reveal-step,
+body.mode-mobile .subtab-btn,
+body.mode-mobile .option-choice-btn {
+  white-space: normal !important;
+  word-break: break-word;
+  max-width: 100%;
+  height: auto;
+  line-height: 1.25;
+}
+
+/* 5. Медиа-запросы для всех планшетов и телефонов (до 1080px и до 768px) */
 @media (max-width: 1080px) {
   body .board-layout,
   body.mode-board .board-layout {
-    grid-template-columns: 1fr !important;
-    gap: 16px;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 14px;
   }
 
   .mini-check-grid,
   .summary-rules-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: minmax(0, 1fr) !important;
   }
 
   .geometry-stage-card {
@@ -232,10 +292,10 @@ body.mode-mobile .level-arrow {
   }
 
   .svg-canvas-wrapper {
-    height: auto !important;
-    aspect-ratio: 860 / 480;
-    min-height: 250px;
-    max-height: 380px;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: clamp(220px, 54vw, 360px) !important;
   }
 
   .level-arrow {
@@ -243,212 +303,400 @@ body.mode-mobile .level-arrow {
   }
 }
 
-@media (max-width: 680px) {
+@media (max-width: 768px) {
   :root,
   body.mode-board,
+  body.mode-desktop,
   body.mode-mobile {
-    --fs-xs: 0.82rem;
-    --fs-sm: 0.92rem;
-    --fs-base: 0.98rem;
-    --fs-md: 1.08rem;
-    --fs-lg: 1.22rem;
-    --fs-xl: 1.42rem;
-    --fs-2xl: 1.62rem;
-    --fs-formula: 1.18rem;
+    --fs-xs: 0.78rem;
+    --fs-sm: 0.86rem;
+    --fs-base: 0.92rem;
+    --fs-md: 1.0rem;
+    --fs-lg: 1.14rem;
+    --fs-xl: 1.28rem;
+    --fs-2xl: 1.42rem;
+    --fs-formula: 1.05rem;
+  }
+
+  html,
+  body {
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
   }
 
   .app-header {
-    padding: 6px 10px;
+    position: relative;
+    padding: 6px 8px;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
   }
 
   .header-top {
-    gap: 6px;
+    gap: 5px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .brand-block {
+    gap: 8px;
+    max-width: 100%;
+    min-width: 0;
   }
 
   .brand-icon {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
+  }
+
+  .brand-titles {
+    min-width: 0;
+    flex: 1;
   }
 
   .brand-titles h1 {
-    font-size: 1.0rem;
+    font-size: 0.92rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .brand-subtitle {
-    font-size: 0.74rem;
+    display: none;
   }
 
   .header-tools {
     width: 100%;
     justify-content: space-between;
     gap: 4px;
+    flex-wrap: nowrap;
+  }
+
+  .header-tools label,
+  #fullscreenHeaderBtn {
+    display: none;
   }
 
   .tool-pill,
   .display-mode-select {
-    padding: 4px 8px;
-    min-height: 32px;
-    font-size: 0.78rem;
+    padding: 4px 6px;
+    min-height: 30px;
+    font-size: 0.74rem;
+    flex: 1 1 50%;
+    justify-content: center;
+    max-width: 100%;
+    min-width: 0;
   }
 
-  /* Горизонтальная прокрутка вкладок и уровней пальцем на телефоне */
+  /* Все 5 вкладок разделов умещаются внутри экрана телефона (по 2 в ряд, текст полностью виден) */
   .main-mode-tabs {
-    width: 100%;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    gap: 6px;
-    padding-bottom: 2px;
-  }
-
-  .main-mode-tabs::-webkit-scrollbar,
-  .levels-track::-webkit-scrollbar {
-    display: none;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+    gap: 5px;
+    padding-bottom: 0;
   }
 
   .mode-tab-btn {
-    flex: 0 0 auto;
-    white-space: nowrap;
-    padding: 6px 11px;
-    min-height: 36px;
-    font-size: 0.84rem;
+    width: 100% !important;
+    min-width: 0 !important;
+    white-space: normal !important;
+    padding: 5px 6px;
+    min-height: 34px;
+    font-size: 0.76rem;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.15;
+  }
+
+  .mode-tab-btn:last-child {
+    grid-column: span 2;
   }
 
   .level-progress-bar {
     margin-top: 4px;
     padding-top: 4px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 
+  /* Все 6 уровней умещаются в 2 ряда по 3 кнопки внутри экрана телефона без наложения текста */
   .levels-track {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    gap: 6px;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+    gap: 5px;
   }
 
   .level-step-btn {
-    flex: 0 0 auto;
-    min-width: 126px;
-    padding: 5px 9px;
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 5px 6px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    text-align: left;
+    gap: 5px;
+    border-radius: 9px;
+    overflow: hidden;
+  }
+
+  .level-step-info {
+    width: auto;
+    align-items: flex-start;
+    overflow: hidden;
+  }
+
+  .level-step-label {
+    display: block;
+    font-size: 0.66rem;
+    white-space: nowrap;
+  }
+
+  .level-step-title {
+    display: none !important;
   }
 
   .level-num-badge {
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
+    font-size: 0.74rem;
   }
 
   .workspace-container {
-    padding: 10px 8px 175px !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    padding: 8px 8px 155px !important;
+    overflow-x: hidden !important;
   }
 
-  .card-panel {
-    padding: 12px;
-    border-radius: 14px;
+  .card-panel,
+  .mini-check-section,
+  .tier-filter-bar,
+  .celebration-banner {
+    padding: 10px 10px;
+    border-radius: 12px;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
   }
 
   .stage-header {
-    gap: 8px;
+    gap: 6px;
     margin-bottom: 8px;
+    width: 100%;
+  }
+
+  .stage-badge {
+    font-size: 0.76rem;
+    padding: 4px 10px;
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  .stage-subtabs {
+    width: 100%;
+    gap: 5px;
   }
 
   .subtab-btn {
-    padding: 6px 10px;
-    min-height: 36px;
-    font-size: 0.8rem;
+    padding: 6px 9px;
+    min-height: 34px;
+    font-size: 0.78rem;
+    white-space: normal !important;
+    word-break: break-word;
+    flex: 1 1 auto;
+    text-align: center;
   }
 
-  /* Оптимальный размер чертежа на экране смартфона для перетаскивания фигур пальцем */
+  /* Оптимальный размер чертежа на экране смартфона */
   .svg-canvas-wrapper {
-    height: auto !important;
-    aspect-ratio: 860 / 480;
-    min-height: 225px;
-    max-height: 300px;
-    padding: 4px;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: clamp(205px, 55vw, 280px) !important;
+    padding: 2px;
   }
 
   .geometry-legend {
-    gap: 8px;
-    padding: 8px 10px;
-    margin-top: 8px;
-    font-size: 0.78rem;
+    gap: 6px;
+    padding: 6px 8px;
+    margin-top: 6px;
+    font-size: 0.74rem;
+    text-align: center;
   }
 
   .task-condition-box {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .task-condition-header {
+    font-size: 0.74rem;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .task-condition-list,
+  .task-condition-find {
+    font-size: 0.82rem;
+  }
+
+  .pedagogical-callout {
     padding: 10px 12px;
+    font-size: 0.88rem;
   }
 
   .math-board {
-    padding: 12px;
-    gap: 10px;
+    padding: 10px;
+    gap: 8px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 
   .formula-banner {
-    padding: 8px 12px;
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .formula-expression {
+    font-size: 1.0rem;
+    word-break: break-word;
   }
 
   .calc-line {
     padding: 8px 10px;
-    font-size: 0.96rem;
-    flex-wrap: wrap;
+    font-size: 0.86rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .calc-math {
+    font-size: 0.92rem;
+    max-width: 100%;
+  }
+
+  .next-calc-step-bar {
+    flex-direction: column;
+    align-items: stretch;
     gap: 6px;
   }
 
   .btn,
-  .btn-reveal-step {
-    padding: 10px 14px;
-    min-height: 44px;
-    font-size: 0.88rem;
+  .btn-reveal-step,
+  .option-choice-btn {
+    padding: 9px 12px;
+    min-height: 40px;
+    font-size: 0.84rem;
+    width: 100%;
+    max-width: 100%;
+    white-space: normal !important;
+    word-break: break-word;
+    text-align: center;
+  }
+
+  .option-choice-btn {
+    text-align: left;
+    gap: 8px;
+  }
+
+  .action-row {
+    gap: 6px;
     width: 100%;
   }
 
   .action-row .btn {
-    flex: 1 1 auto;
+    flex: 1 1 100%;
+  }
+
+  .mini-input-group {
+    width: 100%;
+    gap: 6px;
+    justify-content: flex-start;
   }
 
   .math-input {
-    width: 84px;
-    height: 44px;
-    font-size: 1.05rem;
+    width: 74px;
+    height: 40px;
+    font-size: 0.98rem;
   }
 
   /* Компактная экранная клавиатура для смартфона */
   .board-numpad {
-    padding: 8px;
-    gap: 6px;
+    padding: 6px;
+    gap: 4px;
     justify-content: center;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .board-numpad > span {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 2px;
+    font-size: 0.74rem !important;
   }
 
   .numpad-key {
-    min-width: 44px;
-    height: 44px;
-    font-size: 1.0rem;
-    border-radius: 10px;
+    min-width: 38px;
+    height: 38px;
+    font-size: 0.92rem;
+    border-radius: 8px;
+    flex: 1 1 16%;
   }
 
-  /* Компактная нижняя панель управления на смартфоне */
+  .numpad-key.key-clear {
+    flex: 1 1 42%;
+    font-size: 0.8rem;
+  }
+
+  /* Компактная нижняя панель управления на смартфоне (всего 2 аккуратных ряда) */
   .teacher-dock {
-    padding: 6px 8px;
+    padding: 5px 6px;
+    width: 100%;
+    max-width: 100vw;
   }
 
   .teacher-dock-inner {
-    gap: 5px;
+    gap: 4px;
     justify-content: center;
+    width: 100%;
   }
 
   .dock-group {
     gap: 4px;
     justify-content: center;
     width: 100%;
+    flex-wrap: wrap;
+  }
+
+  #dockFullscreenBtn {
+    display: none;
   }
 
   .dock-btn {
-    padding: 6px 9px;
-    min-height: 36px;
-    font-size: 0.78rem;
-    border-radius: 9px;
+    padding: 5px 6px;
+    min-height: 32px;
+    font-size: 0.72rem;
+    border-radius: 8px;
     flex: 1 1 auto;
+    min-width: 0;
     justify-content: center;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.15;
   }
 
   .dock-divider {
