@@ -96,7 +96,6 @@
     const pauseBtn = document.getElementById('dockPauseAnimBtn');
     const repeatBtn = document.getElementById('dockRepeatBtn');
     const separateBtn = document.getElementById('dockSeparateToggleBtn');
-    const hintBtn = document.getElementById('dockHintBtn');
     const solutionBtn = document.getElementById('dockSolutionBtn');
 
     if (separateBtn) {
@@ -139,15 +138,6 @@
       repeatBtn.addEventListener('click', () => {
         Speech.stop();
         Timeline.repeat();
-      });
-    }
-    if (hintBtn) {
-      hintBtn.addEventListener('click', () => {
-        showTeacherModalToast(
-          '💡 Методическая подсказка',
-          currentHintText ||
-            'Обратите внимание учеников на вершины внутренних углов: именно из них удобнее всего провести вертикальную или горизонтальную линию разделения.'
-        );
       });
     }
     if (solutionBtn) {
@@ -2839,9 +2829,6 @@
         <div class="card-panel geometry-stage-card">
           <div class="stage-header">
             <span class="stage-badge">🎯 Тренажёр • Уровень: ${currentProb.tierName}</span>
-            <button type="button" class="btn btn-secondary" id="trainerHintVisualBtn" style="min-height:44px;padding:6px 14px;">
-              💡 Подсказка
-            </button>
           </div>
 
           <div class="svg-canvas-wrapper">
@@ -3045,15 +3032,6 @@
       if (e.key === 'Enter') checkProblem();
     });
     document.getElementById('trainerNumpadSlot').appendChild(Nav.createBoardNumpad(checkProblem));
-
-    // Кнопка подсказки
-    document.getElementById('trainerHintVisualBtn').onclick = () => {
-      trainerScene.drawSplitLines();
-      trainerScene.colorParts();
-      const fbBox = document.getElementById('trainerFeedbackBox');
-      fbBox.innerHTML = `<div class="feedback-banner warning">💡 Подсказка: ${currentProb.hint}</div>`;
-      Speech.speak(currentProb.hint);
-    };
 
     // Поочерёдный показ шагов решения в Тренажёре
     const trLines = Array.from(root.querySelectorAll('#trainerCalcStepsList .calc-line'));

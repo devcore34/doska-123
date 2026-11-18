@@ -1,13 +1,13 @@
 /* ==========================================================================
    АДАПТАЦИЯ ПОД ЭЛЕКТРОННУЮ ДОСКУ (1920×1080, 1600×900, 1366×768),
-   КОМПЬЮТЕРНЫЙ И МОБИЛЬНЫЙ РЕЖИМЫ (responsive.css)
+   КОМПЬЮТЕРНЫЙ И МОБИЛЬНЫЙ РЕЖИМЫ (ТЕЛЕФОНЫ И ПЛАНШЕТЫ) (responsive.css)
    ========================================================================== */
 
 /* 1. Режим большой интерактивной доски 1920×1080 */
 @media (min-width: 1680px) {
   .workspace-container {
     max-width: 1860px;
-    padding: 20px 32px 125px;
+    padding: 20px 32px 140px;
   }
 
   .board-layout {
@@ -29,7 +29,7 @@
 }
 
 /* 2. Электронная доска 1600×900 и 1366×768 (компактная по высоте, без лишней прокрутки) */
-@media (min-width: 1200px) and (max-height: 920px) {
+@media (min-width: 1120px) and (max-height: 920px) {
   .app-header {
     padding: 8px 20px;
   }
@@ -50,7 +50,7 @@
   }
 
   .workspace-container {
-    padding: 12px 20px 230px;
+    padding: 12px 20px 210px;
   }
 
   .card-panel {
@@ -62,7 +62,7 @@
   }
 
   .svg-canvas-wrapper {
-    height: 380px;
+    height: 390px;
   }
 
   .geometry-svg {
@@ -79,7 +79,7 @@
 }
 
 /* Специально для 1366×768 */
-@media (max-width: 1440px) and (min-width: 1025px) {
+@media (max-width: 1440px) and (min-width: 1081px) {
   :root {
     --fs-xs: 0.88rem;
     --fs-sm: 1.0rem;
@@ -105,70 +105,137 @@
   }
 }
 
-/* 3. Принудительный режим электронной доски (включается переключателем) */
-body.mode-board .board-layout {
-  grid-template-columns: 1.5fr 1fr;
+/* 3. Режим электронной доски (для широких экранов > 1080px) */
+@media (min-width: 1081px) {
+  body.mode-board .board-layout {
+    grid-template-columns: 1.5fr 1fr;
+  }
+
+  body.mode-board .btn,
+  body.mode-board .option-choice-btn {
+    min-height: 52px;
+  }
+
+  body.mode-board .dock-btn {
+    min-height: 42px;
+  }
+
+  body.mode-board .svg-canvas-wrapper {
+    height: 420px;
+  }
+
+  body.mode-board .workspace-container {
+    padding-bottom: 220px;
+  }
 }
 
-body.mode-board .btn,
-body.mode-board .option-choice-btn {
-  min-height: 52px;
+/* ==========================================================================
+   4. МОБИЛЬНЫЙ РЕЖИМ И АДАПТАЦИЯ ПОД СМАРТФОНЫ И ПЛАНШЕТЫ
+   Все фигуры так же разделяются и двигаются пальцем на экране телефона!
+   ========================================================================== */
+
+body.mode-mobile {
+  --fs-xs: 0.84rem;
+  --fs-sm: 0.94rem;
+  --fs-base: 1.02rem;
+  --fs-md: 1.12rem;
+  --fs-lg: 1.28rem;
+  --fs-xl: 1.48rem;
+  --fs-2xl: 1.7rem;
+  --fs-formula: 1.24rem;
 }
 
-body.mode-board .dock-btn {
-  min-height: 42px;
-}
-
-body.mode-board .svg-canvas-wrapper {
-  height: 420px;
-}
-
-body.mode-board .workspace-container {
-  padding-bottom: 260px;
-}
-
-/* 4. Принудительный мобильный режим (для предпросмотра учителем или на смартфоне) */
 body.mode-mobile .workspace-container {
-  max-width: 560px;
+  max-width: 620px;
   margin: 0 auto;
-  padding: 12px 14px 150px;
+  padding: 10px 10px 175px;
 }
 
 body.mode-mobile .board-layout {
-  grid-template-columns: 1fr;
-  gap: 16px;
+  grid-template-columns: 1fr !important;
+  gap: 14px;
 }
 
 body.mode-mobile .mini-check-grid,
 body.mode-mobile .summary-rules-grid {
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr !important;
+  gap: 14px;
 }
 
 body.mode-mobile .geometry-stage-card {
-  min-height: 360px;
+  min-height: auto;
+  padding: 12px;
 }
 
 body.mode-mobile .svg-canvas-wrapper {
-  min-height: 280px;
+  height: auto !important;
+  aspect-ratio: 860 / 480;
+  min-height: 230px;
+  max-height: 340px;
+  padding: 4px;
 }
 
-/* 5. Адаптивная перестройка для планшетов и смартфонов */
+body.mode-mobile .card-panel {
+  padding: 14px;
+  border-radius: 16px;
+}
+
+body.mode-mobile .main-mode-tabs,
+body.mode-mobile .levels-track {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 6px;
+  padding-bottom: 4px;
+}
+
+body.mode-mobile .main-mode-tabs::-webkit-scrollbar,
+body.mode-mobile .levels-track::-webkit-scrollbar {
+  display: none;
+}
+
+body.mode-mobile .mode-tab-btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  padding: 6px 12px;
+  min-height: 36px;
+  font-size: 0.86rem;
+}
+
+body.mode-mobile .level-step-btn {
+  flex: 0 0 auto;
+  min-width: 132px;
+  padding: 6px 10px;
+}
+
+body.mode-mobile .level-arrow {
+  display: none;
+}
+
+/* 5. Автоматические медиа-запросы для планшетов и смартфонов (до 1080px и до 680px) */
 @media (max-width: 1080px) {
-  .board-layout {
-    grid-template-columns: 1fr;
+  body .board-layout,
+  body.mode-board .board-layout {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
   }
 
   .mini-check-grid,
   .summary-rules-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
   }
 
   .geometry-stage-card {
-    min-height: 400px;
+    min-height: auto;
   }
 
   .svg-canvas-wrapper {
-    min-height: 320px;
+    height: auto !important;
+    aspect-ratio: 860 / 480;
+    min-height: 250px;
+    max-height: 380px;
   }
 
   .level-arrow {
@@ -177,36 +244,211 @@ body.mode-mobile .svg-canvas-wrapper {
 }
 
 @media (max-width: 680px) {
-  :root {
-    --fs-xs: 0.85rem;
-    --fs-sm: 0.96rem;
-    --fs-base: 1.05rem;
-    --fs-md: 1.18rem;
-    --fs-lg: 1.35rem;
-    --fs-xl: 1.6rem;
-    --fs-formula: 1.35rem;
+  :root,
+  body.mode-board,
+  body.mode-mobile {
+    --fs-xs: 0.82rem;
+    --fs-sm: 0.92rem;
+    --fs-base: 0.98rem;
+    --fs-md: 1.08rem;
+    --fs-lg: 1.22rem;
+    --fs-xl: 1.42rem;
+    --fs-2xl: 1.62rem;
+    --fs-formula: 1.18rem;
   }
 
   .app-header {
-    padding: 8px 12px;
+    padding: 6px 10px;
+  }
+
+  .header-top {
+    gap: 6px;
+  }
+
+  .brand-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .brand-titles h1 {
+    font-size: 1.0rem;
+  }
+
+  .brand-subtitle {
+    font-size: 0.74rem;
+  }
+
+  .header-tools {
+    width: 100%;
+    justify-content: space-between;
+    gap: 4px;
+  }
+
+  .tool-pill,
+  .display-mode-select {
+    padding: 4px 8px;
+    min-height: 32px;
+    font-size: 0.78rem;
+  }
+
+  /* Горизонтальная прокрутка вкладок и уровней пальцем на телефоне */
+  .main-mode-tabs {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 6px;
+    padding-bottom: 2px;
+  }
+
+  .main-mode-tabs::-webkit-scrollbar,
+  .levels-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mode-tab-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 6px 11px;
+    min-height: 36px;
+    font-size: 0.84rem;
+  }
+
+  .level-progress-bar {
+    margin-top: 4px;
+    padding-top: 4px;
+  }
+
+  .levels-track {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 6px;
+  }
+
+  .level-step-btn {
+    flex: 0 0 auto;
+    min-width: 126px;
+    padding: 5px 9px;
+  }
+
+  .level-num-badge {
+    width: 26px;
+    height: 26px;
   }
 
   .workspace-container {
-    padding: 12px 12px 165px;
+    padding: 10px 8px 175px !important;
   }
 
   .card-panel {
-    padding: 16px;
+    padding: 12px;
+    border-radius: 14px;
   }
 
-  .teacher-dock {
+  .stage-header {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .subtab-btn {
+    padding: 6px 10px;
+    min-height: 36px;
+    font-size: 0.8rem;
+  }
+
+  /* Оптимальный размер чертежа на экране смартфона для перетаскивания фигур пальцем */
+  .svg-canvas-wrapper {
+    height: auto !important;
+    aspect-ratio: 860 / 480;
+    min-height: 225px;
+    max-height: 300px;
+    padding: 4px;
+  }
+
+  .geometry-legend {
+    gap: 8px;
     padding: 8px 10px;
+    margin-top: 8px;
+    font-size: 0.78rem;
+  }
+
+  .task-condition-box {
+    padding: 10px 12px;
+  }
+
+  .math-board {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .formula-banner {
+    padding: 8px 12px;
+  }
+
+  .calc-line {
+    padding: 8px 10px;
+    font-size: 0.96rem;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .btn,
+  .btn-reveal-step {
+    padding: 10px 14px;
+    min-height: 44px;
+    font-size: 0.88rem;
+    width: 100%;
+  }
+
+  .action-row .btn {
+    flex: 1 1 auto;
+  }
+
+  .math-input {
+    width: 84px;
+    height: 44px;
+    font-size: 1.05rem;
+  }
+
+  /* Компактная экранная клавиатура для смартфона */
+  .board-numpad {
+    padding: 8px;
+    gap: 6px;
+    justify-content: center;
+  }
+
+  .numpad-key {
+    min-width: 44px;
+    height: 44px;
+    font-size: 1.0rem;
+    border-radius: 10px;
+  }
+
+  /* Компактная нижняя панель управления на смартфоне */
+  .teacher-dock {
+    padding: 6px 8px;
+  }
+
+  .teacher-dock-inner {
+    gap: 5px;
+    justify-content: center;
+  }
+
+  .dock-group {
+    gap: 4px;
+    justify-content: center;
+    width: 100%;
   }
 
   .dock-btn {
-    padding: 8px 11px;
-    min-height: 42px;
-    font-size: 0.82rem;
+    padding: 6px 9px;
+    min-height: 36px;
+    font-size: 0.78rem;
+    border-radius: 9px;
+    flex: 1 1 auto;
+    justify-content: center;
   }
 
   .dock-divider {

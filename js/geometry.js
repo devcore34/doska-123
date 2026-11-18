@@ -903,13 +903,15 @@ window.GeometryEngine = (function () {
 
         if (movedEnoughToDrag) {
           const rect = svgEl.getBoundingClientRect();
-          const scaleX = rect.width > 0 ? viewW / rect.width : 1;
-          const scaleY = rect.height > 0 ? viewH / rect.height : 1;
+          const uniformScale =
+            rect.width > 0 && rect.height > 0
+              ? Math.max(viewW / rect.width, viewH / rect.height)
+              : 1;
 
-          const rawDx = startDx + screenDx * scaleX;
-          const rawDy = startDy + screenDy * scaleY;
+          const rawDx = startDx + screenDx * uniformScale;
+          const rawDy = startDy + screenDy * uniformScale;
 
-          // Мягкое ограничение, чтобы фигуру нельзя было увести за пределы экрана доски
+          // Мягкое ограничение, чтобы фигуру нельзя было увести за пределы экрана доски или телефона
           const clampedDx = Math.max(-280, Math.min(280, Math.round(rawDx)));
           const clampedDy = Math.max(-180, Math.min(180, Math.round(rawDy)));
 
@@ -1220,6 +1222,18 @@ window.GeometryEngine = (function () {
       svgEl.appendChild(sliceLineEl);
 
       function clientToSvg(clientX, clientY) {
+        try {
+          if (svgEl.createSVGPoint && svgEl.getScreenCTM) {
+            const pt = svgEl.createSVGPoint();
+            pt.x = clientX;
+            pt.y = clientY;
+            const ctm = svgEl.getScreenCTM();
+            if (ctm) {
+              const transformed = pt.matrixTransform(ctm.inverse());
+              return [Math.round(transformed.x), Math.round(transformed.y)];
+            }
+          }
+        } catch (err) {}
         const rect = svgEl.getBoundingClientRect();
         const x = rect.width > 0 ? ((clientX - rect.left) * viewW) / rect.width : 0;
         const y = rect.height > 0 ? ((clientY - rect.top) * viewH) / rect.height : 0;

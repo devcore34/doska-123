@@ -184,7 +184,9 @@ window.NavigationManager = (function () {
             activeInputEl.value += digit;
             activeInputEl.dispatchEvent(new Event('input', { bubbles: true }));
           }
-          activeInputEl.focus();
+          if (window.innerWidth > 860) {
+            activeInputEl.focus();
+          }
         }
       });
       pad.appendChild(k);
@@ -198,7 +200,9 @@ window.NavigationManager = (function () {
       if (activeInputEl) {
         activeInputEl.value = activeInputEl.value.slice(0, -1);
         activeInputEl.dispatchEvent(new Event('input', { bubbles: true }));
-        activeInputEl.focus();
+        if (window.innerWidth > 860) {
+          activeInputEl.focus();
+        }
       }
     });
     pad.appendChild(backBtn);
@@ -234,10 +238,23 @@ window.NavigationManager = (function () {
     activeInputEl = null;
   }
 
+  function autoDetectDeviceMode() {
+    const sel = document.getElementById('displayModeSelect');
+    if (window.innerWidth <= 860) {
+      setDisplayMode('mobile');
+      if (sel) sel.value = 'mobile';
+    } else if (document.body.classList.contains('mode-mobile') && window.innerWidth > 960) {
+      setDisplayMode('board');
+      if (sel) sel.value = 'board';
+    }
+  }
+
   return {
     init(options = {}) {
       onSectionChangeCallback = options.onSectionChange || null;
       onLevelChangeCallback = options.onLevelChange || null;
+      autoDetectDeviceMode();
+      window.addEventListener('resize', autoDetectDeviceMode);
       updateNavigationUI();
     },
     setMainSection,
